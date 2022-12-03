@@ -8,7 +8,7 @@
 		<Copyright>Sergey Govorunov</Copyright>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
-		<AssemblyName>Volt Bot</AssemblyName>
+		<AssemblyName>Volt_Bot</AssemblyName>
 	</PropertyGroup>
 
 	<!--<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
