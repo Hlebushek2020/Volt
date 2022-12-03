@@ -1,0 +1,7 @@
+/.idea
+/.vs
+/packages
+/VoltBot/bin
+/VoltBot/obj
+*Thumbs.db
+*.user
