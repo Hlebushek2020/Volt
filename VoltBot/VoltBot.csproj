@@ -11,6 +11,10 @@
 		<AssemblyName>Volt_Bot</AssemblyName>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <None Remove="Commands\OwnerCommandModule.cs~RF1e618cb.TMP" />
+	</ItemGroup>
+
 	<!--<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<OutputPath>$(SolutionDir)/build/bin/Debug</OutputPath>
 		<IntermediateOutputPath>$(SolutionDir)/build/obj/Debug</IntermediateOutputPath>
