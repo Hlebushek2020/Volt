@@ -38,11 +38,9 @@ namespace VoltBot.Commands.Formatter
 
                 if (command.Aliases?.Count != 0)
                 {
-                    sb.AppendLine("**Алиасы:**");
-                    foreach (string alias in command.Aliases)
-                        sb.AppendLine(alias);
-
-                    sb.AppendLine();
+                    sb.AppendLine("**Алиасы:**")
+                        .AppendJoin(", ", command.Aliases.Select(x => $"`{x}`"))
+                        .AppendLine().AppendLine();
                 }
 
                 if (commandOverload?.Arguments.Count != 0)

@@ -33,7 +33,13 @@ namespace VoltBot.Logs
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            string log = $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {eventId.Name}; {formatter(state, exception)}";
+            string log = $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {(eventId.Name != null ? eventId.Name : "none")}";
+
+            string formatedMessage = formatter(state, exception);
+            if (!string.IsNullOrEmpty(formatedMessage))
+            {
+                log += $"; {formatedMessage}";
+            }
 
             if (exception != null)
             {

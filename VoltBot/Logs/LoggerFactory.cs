@@ -7,16 +7,27 @@ namespace VoltBot.Logs
 {
     internal class LoggerFactory : ILoggerFactory
     {
-        private Dictionary<string, ILoggerProvider> _providers = new Dictionary<string, ILoggerProvider>();
+        #region Instance
+        private static LoggerFactory _current;
 
-        public void AddProvider(ILoggerProvider provider)
+        public static LoggerFactory Current
         {
-
+            get
+            {
+                if (_current == null)
+                    _current = new LoggerFactory();
+                return _current;
+            }
         }
+        #endregion
+
+        private readonly Dictionary<string, ILoggerProvider> _providers = new Dictionary<string, ILoggerProvider>();
+
+        public void AddProvider(ILoggerProvider provider) => _providers.Add(provider.GetType().Name, provider);
 
         public ILogger CreateLogger(string categoryName)
         {
-            if (typeof(BaseDiscordClient).Name.Equals(categoryName))
+            if (typeof(BaseDiscordClient).FullName.Equals(categoryName))
             {
                 categoryName = typeof(DiscordClientLoggerProvider).Name;
             }
@@ -32,7 +43,7 @@ namespace VoltBot.Logs
             return _providers[defaultProviderName].CreateLogger(defaultProviderName);
         }
 
-        public T CreateLogger<T>() => (T)CreateLogger(typeof(T).Name);
+        public ILogger CreateLogger<T>() => CreateLogger(typeof(T).Name);
 
         public void Dispose()
         {
