@@ -2,6 +2,7 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using VoltBot.Commands;
 using VoltBot.Commands.Formatter;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
+using VoltBot.Services;
 
 namespace VoltBot
 {
@@ -37,6 +39,7 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
+        private readonly MessageResendService _messageResendService;
 
         public Bot()
         {
@@ -54,6 +57,12 @@ namespace VoltBot
                 LoggerFactory = loggerFactory
             });
 
+            _discordClient.Ready += DiscordClient_Ready;
+            _discordClient.SocketErrored += DiscordClient_SocketErrored;
+
+            //_messageResendService = new MessageResendService();
+            //_discordClient.MessageCreated += _messageResendService.Resend;
+
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
                 StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix }
@@ -66,6 +75,16 @@ namespace VoltBot
 
             commands.RegisterCommands<OwnerCommandModule>();
             commands.RegisterCommands<AdministratorCommandModule>();
+        }
+
+        private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+            await sender.UpdateStatusAsync(new DiscordActivity("на тебя", ActivityType.Watching));
+
+        private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
+        {
+            _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, "");
+            Environment.Exit(1);
+            return Task.CompletedTask;
         }
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)

@@ -35,8 +35,9 @@ namespace VoltBot.Commands
                 DiscordMessage redirectMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
                 discordEmbed.WithColor(DiscordColor.Rose)
-                    .WithFooter($"Отправлено: {redirectMessage.Timestamp}")
-                    .WithDescription(redirectMessage.Content);
+                    .WithFooter($"Guild: {redirectMessage.Channel.Guild.Name}, Channel: {redirectMessage.Channel.Name}, Time: {redirectMessage.CreationTimestamp}")
+                    .WithDescription(redirectMessage.Content)
+                    .WithTitle(null);
 
                 if (!string.IsNullOrEmpty(reason))
                 {
@@ -46,7 +47,7 @@ namespace VoltBot.Commands
                 if (redirectMessage.Author != null)
                 {
                     discordEmbed.WithAuthor(
-                        name: $"From {redirectMessage.Channel.Name} by {redirectMessage.Author.Username}",
+                        name: redirectMessage.Author.Username,
                         iconUrl: redirectMessage.Author.AvatarUrl);
                 }
 
