@@ -15,7 +15,7 @@ namespace VoltBot.Commands.Formatter
         public CustomHelpFormatter(CommandContext ctx) : base(ctx)
         {
             _embed = new DiscordEmbedBuilder()
-                .WithColor(DiscordColor.Rose);
+                .WithColor(EmbedConstants.SuccessColor);
         }
 
         public override CommandHelpMessage Build()

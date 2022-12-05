@@ -25,14 +25,13 @@ namespace VoltBot.Commands
         public async Task Status(CommandContext ctx)
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-            {
-                Color = DiscordColor.DarkGray
-            };
+                .WithColor(EmbedConstants.StatusColor)
+                .AddField("Net", $"v{Environment.Version}")
+                .AddField("Сборка", $"v{Assembly.GetExecutingAssembly().GetName().Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
+                .AddField("Дата запуска", $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
 
-            discordEmbed.AddField("Net", $"v{Environment.Version}");
-            discordEmbed.AddField("Сборка", $"v{Assembly.GetExecutingAssembly().GetName().Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}");
-            discordEmbed.AddField("Дата запуска", $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
             TimeSpan timeSpan = DateTime.Now - Bot.Current.StartDateTime;
+
             discordEmbed.AddField("Время работы", $"{timeSpan.Days}d, {timeSpan.Hours}h, {timeSpan.Minutes}m, {timeSpan.Seconds}s");
 
             await ctx.RespondAsync(discordEmbed);

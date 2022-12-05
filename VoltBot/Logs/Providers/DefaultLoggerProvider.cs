@@ -5,13 +5,19 @@ namespace VoltBot.Logs.Providers
 {
     internal class DefaultLoggerProvider : ILoggerProvider
     {
+        private readonly LogLevel _minimumLevel;
         private FileLogger _logger;
+
+        public DefaultLoggerProvider(LogLevel minimumLevel = LogLevel.Information)
+        {
+            _minimumLevel = minimumLevel;
+        }
 
         public ILogger CreateLogger(string categoryName)
         {
             if (_logger == null)
             {
-                _logger = new FileLogger(LogWriter.GetDefault());
+                _logger = new FileLogger(LogWriter.GetDefault(), _minimumLevel);
             }
             return _logger;
         }

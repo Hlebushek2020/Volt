@@ -60,8 +60,8 @@ namespace VoltBot
             _discordClient.Ready += DiscordClient_Ready;
             _discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            //_messageResendService = new MessageResendService();
-            //_discordClient.MessageCreated += _messageResendService.Resend;
+            _messageResendService = new MessageResendService();
+            _discordClient.MessageCreated += _messageResendService.Resend;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {

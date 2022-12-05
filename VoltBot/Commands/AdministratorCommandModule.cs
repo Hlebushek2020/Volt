@@ -2,6 +2,8 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace VoltBot.Commands
@@ -18,7 +20,7 @@ namespace VoltBot.Commands
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
               .WithTitle(ctx.Member.DisplayName)
-              .WithColor(DiscordColor.Red);
+              .WithColor(EmbedConstants.ErrorColor);
 
             if (ctx.Message.Reference == null)
             {
@@ -34,7 +36,7 @@ namespace VoltBot.Commands
             {
                 DiscordMessage redirectMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
-                discordEmbed.WithColor(DiscordColor.Rose)
+                discordEmbed.WithColor(EmbedConstants.SuccessColor)
                     .WithFooter($"Guild: {redirectMessage.Channel.Guild.Name}, Channel: {redirectMessage.Channel.Name}, Time: {redirectMessage.CreationTimestamp}")
                     .WithDescription(redirectMessage.Content)
                     .WithTitle(null);
@@ -58,6 +60,24 @@ namespace VoltBot.Commands
                 if (redirectMessage.Embeds?.Count > 0)
                 {
                     newMessage.AddEmbeds(redirectMessage.Embeds);
+                }
+
+                if (redirectMessage.Attachments?.Count > 0)
+                {
+                    newMessage.AddEmbeds(redirectMessage.Attachments
+                        .Select(x =>
+                        {
+                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder().WithColor(EmbedConstants.SuccessColor);
+                            if (x.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                attacmentEmbed.WithImageUrl(x.Url);
+                            }
+                            else
+                            {
+                                attacmentEmbed.WithUrl(x.Url);
+                            }
+                            return attacmentEmbed.Build();
+                        }));
                 }
 
                 await targetChannel.SendMessageAsync(newMessage);
