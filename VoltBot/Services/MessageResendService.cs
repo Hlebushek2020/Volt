@@ -47,7 +47,7 @@ namespace VoltBot.Services
 
                 DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                     .WithColor(EmbedConstants.SuccessColor)
-                    .WithFooter($"Guild: {e.Guild.Name}, Channel: {e.Channel.Name}, Time: {e.Message.CreationTimestamp}")
+                    .WithFooter($"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {resendMessage.CreationTimestamp}")
                     .WithDescription(resendMessage.Content);
 
                 if (resendMessage.Author != null)
