@@ -11,16 +11,32 @@ namespace VoltBot.Commands
     [RequireUserPermissions(Permissions.Administrator)]
     internal class AdministratorCommandModule : BaseCommandModule
     {
-        [Command("redirect")]
-        [Aliases("rd")]
-        [Description("Переслать сообщение в другой канал и удалить его с предыдущего")]
-        public async Task Redirect(CommandContext ctx,
+        [Command("resend")]
+        [Aliases("r")]
+        [Description("Переслать сообщение в другой канал")]
+        public async Task Forward(CommandContext ctx,
             [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
             [Description("Причина (необязательно)"), RemainingText] string reason = null)
         {
+            await Forward(ctx, targetChannel, reason, false, false);
+        }
+
+        [Command("resend-delete")]
+        [Aliases("rd")]
+        [Description("Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
+        public async Task ForwardAndDeleteOriginal(CommandContext ctx,
+            [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
+            [Description("Причина (необязательно)"), RemainingText] string reason = null)
+        {
+            await Forward(ctx, targetChannel, reason, true, true);
+        }
+
+        private async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
+            string reason, bool notificationAuthor, bool deleteOriginal)
+        {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-              .WithTitle(ctx.Member.DisplayName)
-              .WithColor(EmbedConstants.ErrorColor);
+                .WithTitle(ctx.Member.DisplayName)
+                .WithColor(EmbedConstants.ErrorColor);
 
             if (ctx.Message.Reference == null)
             {
@@ -34,11 +50,11 @@ namespace VoltBot.Commands
             }
             else
             {
-                DiscordMessage redirectMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
+                DiscordMessage forwardMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
                 discordEmbed.WithColor(EmbedConstants.SuccessColor)
-                    .WithFooter($"Guild: {redirectMessage.Channel.Guild.Name}, Channel: {redirectMessage.Channel.Name}, Time: {redirectMessage.CreationTimestamp}")
-                    .WithDescription(redirectMessage.Content)
+                    .WithFooter($"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
+                    .WithDescription(forwardMessage.Content)
                     .WithTitle(null);
 
                 if (!string.IsNullOrEmpty(reason))
@@ -46,25 +62,25 @@ namespace VoltBot.Commands
                     discordEmbed.AddField("Причина перенаправления", reason);
                 }
 
-                if (redirectMessage.Author != null)
+                if (forwardMessage.Author != null)
                 {
                     discordEmbed.WithAuthor(
-                        name: redirectMessage.Author.Username,
-                        iconUrl: redirectMessage.Author.AvatarUrl);
+                        name: forwardMessage.Author.Username,
+                        iconUrl: forwardMessage.Author.AvatarUrl);
                 }
 
-                DiscordMessageBuilder newMessage = new DiscordMessageBuilder();
+                DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
 
-                newMessage.AddEmbed(discordEmbed);
+                newMessageBuilder.AddEmbed(discordEmbed);
 
-                if (redirectMessage.Embeds?.Count > 0)
+                if (forwardMessage.Embeds?.Count > 0)
                 {
-                    newMessage.AddEmbeds(redirectMessage.Embeds);
+                    newMessageBuilder.AddEmbeds(forwardMessage.Embeds);
                 }
 
-                if (redirectMessage.Attachments?.Count > 0)
+                if (forwardMessage.Attachments?.Count > 0)
                 {
-                    newMessage.AddEmbeds(redirectMessage.Attachments
+                    newMessageBuilder.AddEmbeds(forwardMessage.Attachments
                         .Select(x =>
                         {
                             DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder().WithColor(EmbedConstants.SuccessColor);
@@ -80,8 +96,29 @@ namespace VoltBot.Commands
                         }));
                 }
 
-                await targetChannel.SendMessageAsync(newMessage);
+                DiscordMessage newMessage = await targetChannel.SendMessageAsync(newMessageBuilder);
+
                 await ctx.Message.DeleteAsync();
+                if (deleteOriginal)
+                {
+                    await forwardMessage.DeleteAsync();
+                }
+
+                if (forwardMessage.Author != null && notificationAuthor)
+                {
+                    DiscordMember discordMember = await ctx.Guild.GetMemberAsync(forwardMessage.Author.Id);
+                    if (!discordMember.IsBot)
+                    {
+                        DiscordDmChannel discordDmChannel = await discordMember.CreateDmChannelAsync();
+
+                        DiscordEmbedBuilder dmDiscordEmbed = new DiscordEmbedBuilder()
+                            .WithColor(EmbedConstants.WarningColor)
+                            .WithTitle("Пересылка сообщения")
+                            .WithDescription($"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
+
+                        await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
+                    }
+                }
             }
         }
     }
