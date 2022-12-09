@@ -43,7 +43,8 @@ namespace VoltBot.Services
             {
                 _defaultLogger.LogInformation(eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
 
-                DiscordMessage resendMessage = await e.Channel.GetMessageAsync(resendMessageLocation.Item3);
+                DiscordChannel discordChannel = await sender.GetChannelAsync(resendMessageLocation.Item2);
+                DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
 
                 DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                     .WithColor(EmbedConstants.SuccessColor)
