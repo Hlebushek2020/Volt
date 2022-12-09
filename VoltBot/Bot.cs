@@ -40,6 +40,7 @@ namespace VoltBot
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
         private readonly ForwardingMessageByUrlService _forwardingMessageByUrl;
+        private readonly BotPingService _botPingService;
 
         public Bot()
         {
@@ -62,6 +63,9 @@ namespace VoltBot
 
             _forwardingMessageByUrl = new ForwardingMessageByUrlService();
             _discordClient.MessageCreated += _forwardingMessageByUrl.ForwardingMessageByUrl;
+
+            _botPingService = new BotPingService();
+            _discordClient.MessageCreated += _botPingService.Ping;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
