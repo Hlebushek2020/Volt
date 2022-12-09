@@ -11,7 +11,7 @@ using VoltBot.Logs.Providers;
 
 namespace VoltBot.Services
 {
-    internal class MessageResendService
+    internal class ForwardingMessageByUrlService
     {
         private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
         private readonly Regex _messagePattern = new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)", RegexOptions.Compiled);
@@ -33,9 +33,9 @@ namespace VoltBot.Services
             return null;
         }
 
-        public async Task Resend(DiscordClient sender, MessageCreateEventArgs e)
+        public async Task ForwardingMessageByUrl(DiscordClient sender, MessageCreateEventArgs e)
         {
-            EventId eventId = new EventId(0, "Resend");
+            EventId eventId = new EventId(0, "Forwarding Message By Url");
 
             Tuple<ulong, ulong, ulong> resendMessageLocation = GetMessageLocation(e.Message.Content);
 

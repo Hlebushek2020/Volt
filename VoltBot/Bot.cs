@@ -39,7 +39,7 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
-        private readonly MessageResendService _messageResendService;
+        private readonly ForwardingMessageByUrlService _forwardingMessageByUrl;
 
         public Bot()
         {
@@ -60,8 +60,8 @@ namespace VoltBot
             _discordClient.Ready += DiscordClient_Ready;
             _discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            _messageResendService = new MessageResendService();
-            _discordClient.MessageCreated += _messageResendService.Resend;
+            _forwardingMessageByUrl = new ForwardingMessageByUrlService();
+            _discordClient.MessageCreated += _forwardingMessageByUrl.ForwardingMessageByUrl;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {

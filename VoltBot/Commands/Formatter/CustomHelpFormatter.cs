@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace VoltBot.Commands.Formatter
@@ -15,7 +16,8 @@ namespace VoltBot.Commands.Formatter
         public CustomHelpFormatter(CommandContext ctx) : base(ctx)
         {
             _embed = new DiscordEmbedBuilder()
-                .WithColor(EmbedConstants.SuccessColor);
+                .WithColor(EmbedConstants.SuccessColor)
+                .WithFooter($"v{Assembly.GetExecutingAssembly().GetName().Version}");
         }
 
         public override CommandHelpMessage Build()
