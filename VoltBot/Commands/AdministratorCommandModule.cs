@@ -71,6 +71,11 @@ namespace VoltBot.Commands
                     discordEmbed.WithAuthor(
                         name: forwardMessage.Author.Username,
                         iconUrl: forwardMessage.Author.AvatarUrl);
+
+                    if (!deleteOriginal)
+                    {
+                        discordEmbed.Author.Url = forwardMessage.JumpLink.ToString();
+                    }
                 }
 
                 DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
