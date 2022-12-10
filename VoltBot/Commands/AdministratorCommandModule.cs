@@ -2,9 +2,14 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using VoltBot.Logs;
+using VoltBot.Logs.Providers;
 
 namespace VoltBot.Commands
 {
@@ -80,20 +85,33 @@ namespace VoltBot.Commands
 
                 if (forwardMessage.Attachments?.Count > 0)
                 {
-                    newMessageBuilder.AddEmbeds(forwardMessage.Attachments
-                        .Select(x =>
+                    foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
+                    {
+                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder().WithColor(EmbedConstants.SuccessColor);
-                            if (x.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
+                                .WithColor(EmbedConstants.SuccessColor)
+                                .WithImageUrl(discordAttachment.Url);
+                            newMessageBuilder.AddEmbed(attacmentEmbed.Build());
+                        }
+                        else
+                        {
+                            if (discordAttachment.FileName != null)
                             {
-                                attacmentEmbed.WithImageUrl(x.Url);
+                                try
+                                {
+                                    HttpClient client = new HttpClient();
+                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                                    newMessageBuilder.AddFile(discordAttachment.FileName, fileStream);
+                                }
+                                catch (Exception ex)
+                                {
+                                    ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+                                    defaultLogger.LogWarning(new EventId(0, "Command: resend / resend-delete"), ex, "");
+                                }
                             }
-                            else
-                            {
-                                attacmentEmbed.WithUrl(x.Url);
-                            }
-                            return attacmentEmbed.Build();
-                        }));
+                        }
+                    }
                 }
 
                 DiscordMessage newMessage = await targetChannel.SendMessageAsync(newMessageBuilder);

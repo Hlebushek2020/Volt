@@ -49,7 +49,7 @@ namespace VoltBot.Logs
             lock (this)
             {
                 _fileLog.WriteLine(log);
-                if (exception != null)
+                if (exception != null && logLevel > LogLevel.Warning)
                     _fileLog.WriteLine(exception.StackTrace);
             }
 

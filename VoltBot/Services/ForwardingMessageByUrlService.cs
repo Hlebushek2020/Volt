@@ -3,7 +3,11 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VoltBot.Logs;
@@ -69,20 +73,32 @@ namespace VoltBot.Services
 
                 if (resendMessage.Attachments?.Count > 0)
                 {
-                    newMessage.AddEmbeds(resendMessage.Attachments
-                        .Select(x =>
+                    foreach (DiscordAttachment discordAttachment in resendMessage.Attachments)
+                    {
+                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder().WithColor(EmbedConstants.SuccessColor);
-                            if (x.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
+                                .WithColor(EmbedConstants.SuccessColor)
+                                .WithImageUrl(discordAttachment.Url);
+                            newMessage.AddEmbed(attacmentEmbed.Build());
+                        }
+                        else
+                        {
+                            if (discordAttachment.FileName != null)
                             {
-                                attacmentEmbed.WithImageUrl(x.Url);
+                                try
+                                {
+                                    HttpClient client = new HttpClient();
+                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                                    newMessage.AddFile(discordAttachment.FileName, fileStream);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _defaultLogger.LogWarning(eventId, ex, "");
+                                }
                             }
-                            else
-                            {
-                                attacmentEmbed.WithUrl(x.Url);
-                            }
-                            return attacmentEmbed.Build();
-                        }));
+                        }
+                    }
                 }
 
                 await e.Channel.SendMessageAsync(newMessage);
