@@ -4,8 +4,6 @@ using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using VoltBot.Logs.Providers;
-using VoltBot.Logs;
 
 namespace VoltBot.Services
 {
