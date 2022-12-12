@@ -138,7 +138,10 @@ namespace VoltBot.Commands
                             .WithTitle("Пересылка сообщения")
                             .WithDescription($"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
 
-                        await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
+                        DiscordMessage discordDmMessage = await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
+
+                        DiscordEmoji emoji = DiscordEmoji.FromName(ctx.Client, ":negative_squared_cross_mark:", false);
+                        await discordDmMessage.CreateReactionAsync(emoji);
                     }
                 }
             }

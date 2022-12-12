@@ -39,8 +39,9 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
-        private readonly ForwardingMessageByUrlService _forwardingMessageByUrl;
-        private readonly BotPingService _botPingService;
+        private readonly ForwardingMessageByUrlModule _forwardingMessageByUrl;
+        private readonly BotPingModule _botPingService;
+        private readonly DeletingMessagesByEmojiModule _deletingMessagesByEmoji;
 
         public Bot()
         {
@@ -61,11 +62,14 @@ namespace VoltBot
             _discordClient.Ready += DiscordClient_Ready;
             _discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            _forwardingMessageByUrl = new ForwardingMessageByUrlService();
-            _discordClient.MessageCreated += _forwardingMessageByUrl.ForwardingMessageByUrl;
+            _forwardingMessageByUrl = new ForwardingMessageByUrlModule();
+            _discordClient.MessageCreated += _forwardingMessageByUrl.Handler;
 
-            _botPingService = new BotPingService();
-            _discordClient.MessageCreated += _botPingService.Ping;
+            _botPingService = new BotPingModule();
+            _discordClient.MessageCreated += _botPingService.Handler;
+
+            _deletingMessagesByEmoji = new DeletingMessagesByEmojiModule();
+            _discordClient.MessageReactionAdded += _deletingMessagesByEmoji.Handler;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
