@@ -17,7 +17,7 @@ namespace VoltBot.Logs.Providers
         {
             if (_logger == null)
             {
-                _logger = new FileLogger(LogWriter.GetDefault(), _minimumLevel);
+                _logger = new FileLogger(LogWriter.GetOrCreate(), _minimumLevel);
             }
             return _logger;
         }
