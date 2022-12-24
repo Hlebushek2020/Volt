@@ -3,17 +3,20 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
+using System.IO;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
+using VoltBot.Modules;
 
 namespace VoltBot.Services
 {
-    internal class ForwardingMessageByUrlService
+    internal class ForwardingMessageByUrlModule : IHandlerModule<MessageCreateEventArgs>
     {
         private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+        private readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
         private readonly Regex _messagePattern = new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)", RegexOptions.Compiled);
 
         private Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
@@ -33,15 +36,13 @@ namespace VoltBot.Services
             return null;
         }
 
-        public async Task ForwardingMessageByUrl(DiscordClient sender, MessageCreateEventArgs e)
+        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
-            EventId eventId = new EventId(0, "Forwarding Message By Url");
-
             Tuple<ulong, ulong, ulong> resendMessageLocation = GetMessageLocation(e.Message.Content);
 
             if (resendMessageLocation != null)
             {
-                _defaultLogger.LogInformation(eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
+                _defaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
 
                 DiscordChannel discordChannel = await sender.GetChannelAsync(resendMessageLocation.Item2);
                 DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
@@ -58,34 +59,48 @@ namespace VoltBot.Services
                         iconUrl: resendMessage.Author.AvatarUrl);
                 }
 
-                DiscordMessageBuilder newMessage = new DiscordMessageBuilder();
+                DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
 
-                newMessage.AddEmbed(discordEmbed);
+                newMessageBuilder.AddEmbed(discordEmbed);
 
                 if (resendMessage.Embeds?.Count > 0)
                 {
-                    newMessage.AddEmbeds(resendMessage.Embeds);
+                    newMessageBuilder.AddEmbeds(resendMessage.Embeds);
                 }
 
                 if (resendMessage.Attachments?.Count > 0)
                 {
-                    newMessage.AddEmbeds(resendMessage.Attachments
-                        .Select(x =>
+                    foreach (DiscordAttachment discordAttachment in resendMessage.Attachments)
+                    {
+                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder().WithColor(EmbedConstants.SuccessColor);
-                            if (x.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
+                                .WithColor(EmbedConstants.SuccessColor)
+                                .WithImageUrl(discordAttachment.Url);
+                            newMessageBuilder.AddEmbed(attacmentEmbed.Build());
+                        }
+                        else
+                        {
+                            if (discordAttachment.FileName != null)
                             {
-                                attacmentEmbed.WithImageUrl(x.Url);
+                                try
+                                {
+                                    HttpClient client = new HttpClient();
+                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                                    newMessageBuilder.AddFile(discordAttachment.FileName, fileStream);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _defaultLogger.LogWarning(_eventId, ex, "");
+                                }
                             }
-                            else
-                            {
-                                attacmentEmbed.WithUrl(x.Url);
-                            }
-                            return attacmentEmbed.Build();
-                        }));
+                        }
+                    }
                 }
 
-                await e.Channel.SendMessageAsync(newMessage);
+                DiscordMessage newMessage = await e.Message.RespondAsync(newMessageBuilder);
+
+                await newMessage.CreateReactionAsync(DiscordEmoji.FromName(sender, ":negative_squared_cross_mark:", false));
             }
         }
     }

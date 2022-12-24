@@ -39,7 +39,9 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
-        private readonly ForwardingMessageByUrlService _forwardingMessageByUrl;
+        private readonly ForwardingMessageByUrlModule _forwardingMessageByUrl;
+        private readonly BotPingModule _botPingService;
+        private readonly DeletingMessagesByEmojiModule _deletingMessagesByEmoji;
 
         public Bot()
         {
@@ -60,8 +62,14 @@ namespace VoltBot
             _discordClient.Ready += DiscordClient_Ready;
             _discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            _forwardingMessageByUrl = new ForwardingMessageByUrlService();
-            _discordClient.MessageCreated += _forwardingMessageByUrl.ForwardingMessageByUrl;
+            _forwardingMessageByUrl = new ForwardingMessageByUrlModule();
+            _discordClient.MessageCreated += _forwardingMessageByUrl.Handler;
+
+            _botPingService = new BotPingModule();
+            _discordClient.MessageCreated += _botPingService.Handler;
+
+            _deletingMessagesByEmoji = new DeletingMessagesByEmojiModule();
+            _discordClient.MessageReactionAdded += _deletingMessagesByEmoji.Handler;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -106,18 +114,18 @@ namespace VoltBot
 
             if (exception is ArgumentException)
             {
-                embed.WithDescription($"В команде `{e.Command.Name}` ошибка");
-                _defaultLogger.LogError(new EventId(0, $"Command: {e.Command.Name}"), exception, "");
+                embed.WithDescription($"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
+                _defaultLogger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, "");
             }
             else if (exception is CommandNotFoundException commandNotFoundEx)
             {
                 embed.WithDescription($"Неизвестная команда `{commandNotFoundEx.CommandName}`");
-                _defaultLogger.LogError(new EventId(0, $"Command: {commandNotFoundEx.CommandName}"), exception, "");
+                _defaultLogger.LogWarning(new EventId(0, $"Command: {commandNotFoundEx.CommandName}"), exception, "");
             }
             else if (exception is ChecksFailedException checksFailedEx)
             {
                 embed.WithDescription($"У вас нет доступа к команде `{checksFailedEx.Command.Name}`");
-                _defaultLogger.LogError(new EventId(0, $"Command: {checksFailedEx.Command.Name}"), exception, "");
+                _defaultLogger.LogWarning(new EventId(0, $"Command: {checksFailedEx.Command.Name}"), exception, "");
             }
             else
             {

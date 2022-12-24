@@ -6,7 +6,8 @@ namespace VoltBot.Logs.Loggers
     internal class FileLogger : ILogger, IDisposable
     {
         public LogLevel MinimumLevel { get; }
-        private LogWriter _logWriter { get; }
+
+        private readonly LogWriter _logWriter;
 
         public FileLogger(LogWriter logWriter, LogLevel logLevel = LogLevel.Information)
         {

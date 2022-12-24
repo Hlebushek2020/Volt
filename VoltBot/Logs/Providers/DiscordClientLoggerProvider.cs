@@ -5,7 +5,7 @@ namespace VoltBot.Logs.Providers
 {
     internal class DiscordClientLoggerProvider : ILoggerProvider
     {
-        private LogLevel _minimumLevel;
+        private readonly LogLevel _minimumLevel;
         private FileLogger _logger;
 
         public DiscordClientLoggerProvider(LogLevel minimumLevel = LogLevel.Information)
@@ -17,7 +17,7 @@ namespace VoltBot.Logs.Providers
         {
             if (_logger == null)
             {
-                _logger = new FileLogger(LogWriter.GetDefault(), _minimumLevel);
+                _logger = new FileLogger(LogWriter.GetOrCreate(), _minimumLevel);
             }
             return _logger;
         }

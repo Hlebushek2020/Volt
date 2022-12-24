@@ -6,14 +6,10 @@
 		<RootNamespace>VoltBot</RootNamespace>
 		<Authors>Sergey Govorunov</Authors>
 		<Copyright>Sergey Govorunov</Copyright>
-		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<FileVersion>1.0.0.0</FileVersion>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
 		<AssemblyName>Volt_Bot</AssemblyName>
 	</PropertyGroup>
-
-	<ItemGroup>
-	  <None Remove="Commands\OwnerCommandModule.cs~RF1e618cb.TMP" />
-	</ItemGroup>
 
 	<!--<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<OutputPath>$(SolutionDir)/build/bin/Debug</OutputPath>
