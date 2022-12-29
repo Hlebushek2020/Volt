@@ -86,7 +86,8 @@ namespace VoltBot
         }
 
         private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
-            await sender.UpdateStatusAsync(new DiscordActivity("на тебя", ActivityType.Watching));
+            await sender.UpdateStatusAsync(new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help",
+                ActivityType.Watching));
 
         private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
         {
@@ -97,7 +98,8 @@ namespace VoltBot
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
-            _defaultLogger.LogInformation(new EventId(0, $"Command: {e.Command.Name}"), "Command completed successfully");
+            _defaultLogger.LogInformation(new EventId(0, $"Command: {e.Command.Name}"),
+                "Command completed successfully");
             return Task.CompletedTask;
         }
 
@@ -114,7 +116,8 @@ namespace VoltBot
 
             if (exception is ArgumentException)
             {
-                embed.WithDescription($"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
+                embed.WithDescription(
+                    $"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
                 _defaultLogger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, "");
             }
             else if (exception is CommandNotFoundException commandNotFoundEx)
@@ -129,7 +132,8 @@ namespace VoltBot
             }
             else
             {
-                embed.WithDescription("При выполнении команды произошла неизвестная ошибка, обратитесь к администраторам сервера (гильдии)");
+                embed.WithDescription(
+                    "При выполнении команды произошла неизвестная ошибка, обратитесь к администраторам сервера (гильдии)");
                 _defaultLogger.LogError(new EventId(0, $"Command: {e.Command?.Name ?? "Unknown"}"), exception, "");
             }
 
