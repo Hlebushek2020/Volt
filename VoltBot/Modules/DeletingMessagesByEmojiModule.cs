@@ -25,11 +25,10 @@ namespace VoltBot.Services
                     $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                 if (e.Guild != null)
                 {
-                    IReadOnlyList<DiscordMessage> afterMessages =
-                        await e.Channel.GetMessagesAfterAsync(e.Message.Id, 5);
-                    for (int numMessage = 0; numMessage < afterMessages.Count; numMessage++)
+                    IReadOnlyList<DiscordMessage> messages = await e.Channel.GetMessagesAsync(5);
+                    for (int numMessage = 0; numMessage < messages.Count; numMessage++)
                     {
-                        DiscordMessage message = afterMessages[numMessage];
+                        DiscordMessage message = messages[numMessage];
                         if (message.Author.Id.Equals(sender.CurrentUser.Id))
                         {
                             DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
