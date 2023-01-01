@@ -19,8 +19,9 @@ namespace VoltBot.Modules
 {
     public class ForwardingPostFromVkByUrlModule : IHandlerModule<MessageCreateEventArgs>
     {
-        private readonly VkApi _vkApi = new VkApi();
         private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+        private readonly EventId _eventId = new EventId(0, "Forwarding Post From Vk By Url");
+        private readonly VkApi _vkApi = new VkApi();
         private readonly Regex _groupExportLink =
             new Regex(@"(?<!\\)https:\/\/vk.com\/wall(-?\d+)_(\d+)", RegexOptions.Compiled);
         private readonly Regex _groupNormalLink =
@@ -28,6 +29,7 @@ namespace VoltBot.Modules
 
         public ForwardingPostFromVkByUrlModule()
         {
+            _defaultLogger.LogInformation(_eventId, "Vk client connect");
             _vkApi.Authorize(new ApiAuthParams() { AccessToken = Settings.Settings.Current.VkSecret });
         }
 
@@ -38,12 +40,15 @@ namespace VoltBot.Modules
                 DiscordEmoji deleteEmoji = DiscordEmoji.FromName(sender, ":negative_squared_cross_mark:", false);
 
                 string id = TryGetGroupPostIdFromExportUrl(e.Message.Content);
-                if (!string.IsNullOrWhiteSpace(id))
-                    await ParseGroupPost(id, deleteEmoji, e.Message, e.Channel);
+                if (string.IsNullOrWhiteSpace(id))
+                    id = TryGetGroupPostIdFromRegularUrl(e.Message.Content);
 
-                id = TryGetGroupPostIdFromRegularUrl(e.Message.Content);
                 if (!string.IsNullOrWhiteSpace(id))
+                {
+                    _defaultLogger.LogInformation(_eventId,
+                        $"{e.Message.Author.Username}#{e.Message.Author.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                     await ParseGroupPost(id, deleteEmoji, e.Message, e.Channel);
+                }
             }
         }
 
