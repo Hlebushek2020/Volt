@@ -29,8 +29,15 @@ namespace VoltBot.Modules
 
         public ForwardingPostFromVkByUrlModule()
         {
-            _defaultLogger.LogInformation(_eventId, "Vk client connect");
-            _vkApi.Authorize(new ApiAuthParams() { AccessToken = Settings.Settings.Current.VkSecret });
+            _defaultLogger.LogInformation(_eventId, "Connection to vk");
+            try
+            {
+                _vkApi.Authorize(new ApiAuthParams() { AccessToken = Settings.Settings.Current.VkSecret });
+            }
+            catch (Exception ex)
+            {
+                _defaultLogger.LogError(_eventId, ex, "Fail connecting to vk");
+            }
         }
 
         public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
