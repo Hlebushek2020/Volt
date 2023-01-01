@@ -11,6 +11,7 @@ using VoltBot.Commands;
 using VoltBot.Commands.Formatter;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
+using VoltBot.Modules;
 using VoltBot.Services;
 
 namespace VoltBot
@@ -40,6 +41,7 @@ namespace VoltBot
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
         private readonly ForwardingMessageByUrlModule _forwardingMessageByUrl;
+        private readonly ForwardingPostFromVkByUrlModule _forwardingPostFromVkByUrl;
         private readonly BotPingModule _botPingService;
         private readonly DeletingMessagesByEmojiModule _deletingMessagesByEmoji;
 
@@ -64,6 +66,9 @@ namespace VoltBot
 
             _forwardingMessageByUrl = new ForwardingMessageByUrlModule();
             _discordClient.MessageCreated += _forwardingMessageByUrl.Handler;
+
+            _forwardingPostFromVkByUrl = new ForwardingPostFromVkByUrlModule();
+            _discordClient.MessageCreated += _forwardingPostFromVkByUrl.Handler;
 
             _botPingService = new BotPingModule();
             _discordClient.MessageCreated += _botPingService.Handler;

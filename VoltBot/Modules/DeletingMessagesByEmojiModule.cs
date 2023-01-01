@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Collections.Generic;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
@@ -20,26 +21,35 @@ namespace VoltBot.Services
 
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
-                DiscordMessage discordMessage = await e.Channel.GetMessageAsync(e.Message.Id);
-                if (discordMessage.Author.Id.Equals(sender.CurrentUser.Id))
+                _defaultLogger.LogInformation(_eventId,
+                    $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                if (e.Guild != null)
                 {
-                    _defaultLogger.LogInformation(_eventId, $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
-
-                    if (e.Guild != null)
+                    IReadOnlyList<DiscordMessage> afterMessages =
+                        await e.Channel.GetMessagesAfterAsync(e.Message.Id, 5);
+                    for (int numMessage = 0; numMessage < afterMessages.Count; numMessage++)
                     {
-                        DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
-                        if (discordMember.Permissions.HasPermission(Permissions.Administrator) ||
-                            e.Message.ReferencedMessage?.Author.Id == e.User.Id && discordMessage.IsTTS)
+                        DiscordMessage message = afterMessages[numMessage];
+                        if (message.Author.Id.Equals(sender.CurrentUser.Id))
                         {
-                            await e.Message.DeleteAsync();
-                            e.Handled = true;
+                            DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
+                            if (discordMember.Permissions.HasPermission(Permissions.Administrator) ||
+                                e.Message.ReferencedMessage?.Author.Id == e.User.Id)
+                            {
+                                await e.Message.DeleteAsync();
+                                e.Handled = true;
+                            }
+                        }
+                        else
+                        {
+                            numMessage = 100;
                         }
                     }
-                    else
-                    {
-                        await e.Message.DeleteAsync();
-                        e.Handled = true;
-                    }
+                }
+                else
+                {
+                    await e.Message.DeleteAsync();
+                    e.Handled = true;
                 }
             }
         }
