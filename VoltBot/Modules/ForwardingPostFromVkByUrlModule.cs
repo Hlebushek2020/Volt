@@ -219,7 +219,8 @@ namespace VoltBot.Modules
                 if (repostInfo.Length != 0)
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(repostInfo.ToString()));
+                        .WithDescription(repostInfo.ToString())
+                        .WithColor(EmbedConstants.SuccessColor));
                 }
 
                 // 2-nd embed can be splitted in more embeds. Each one contains post text, splitted in chunks
@@ -257,14 +258,16 @@ namespace VoltBot.Modules
                 foreach (string chunk in messageChunks)
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(chunk));
+                        .WithDescription(chunk)
+                        .WithColor(EmbedConstants.SuccessColor));
                 }
 
                 // 3rd embed
                 if (videoUrls.Length != 0)
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(videoUrls.ToString()));
+                        .WithDescription(videoUrls.ToString())
+                        .WithColor(EmbedConstants.SuccessColor));
                 }
 
                 firstEmbedWithImageIndex = finalEmbeds.Count - 1;
@@ -286,7 +289,8 @@ namespace VoltBot.Modules
                 }
 
                 finalEmbeds.Add(new DiscordEmbedBuilder()
-                    .WithDescription(concatedPostMessage.ToString()));
+                    .WithDescription(concatedPostMessage.ToString())
+                    .WithColor(EmbedConstants.SuccessColor));
             }
 
             // In case, when post length is less than 4096 symbols topBuilder and bottomBuilder will be the same 
@@ -303,7 +307,8 @@ namespace VoltBot.Modules
                 for (int i = 1; i < imageUrls.Count; i++)
                     finalEmbeds.Add(new DiscordEmbedBuilder()
                         .WithImageUrl(imageUrls[i])
-                        .WithUrl($"http://vk.com/wall{postId}"));
+                        .WithUrl($"http://vk.com/wall{postId}")
+                        .WithColor(EmbedConstants.SuccessColor));
             }
 
             // bottomBuilder is last one, if:

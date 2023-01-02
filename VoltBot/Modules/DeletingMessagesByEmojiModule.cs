@@ -25,23 +25,25 @@ namespace VoltBot.Services
                     $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                 if (e.Guild != null)
                 {
-                    IReadOnlyList<DiscordMessage> messages = await e.Channel.GetMessagesAsync(5);
-                    for (int numMessage = 0; numMessage < messages.Count; numMessage++)
+                    DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
+                    if (discordMember.Permissions.HasPermission(Permissions.Administrator) ||
+                        e.Message.ReferencedMessage?.Author.Id == e.User.Id)
                     {
-                        DiscordMessage message = messages[numMessage];
-                        if (message.Author.Id.Equals(sender.CurrentUser.Id))
+                        List<DiscordMessage> discordMessages = new List<DiscordMessage>();
+                        discordMessages.AddRange(await e.Channel.GetMessagesAfterAsync(e.Message.Id, 4));
+                        discordMessages.Add(e.Message);
+                        for (int numMessage = discordMessages.Count - 1; numMessage >= 0; numMessage--)
                         {
-                            DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
-                            if (discordMember.Permissions.HasPermission(Permissions.Administrator) ||
-                                e.Message.ReferencedMessage?.Author.Id == e.User.Id)
+                            DiscordMessage message = discordMessages[numMessage];
+                            if (message.Author.Id.Equals(sender.CurrentUser.Id))
                             {
-                                await e.Message.DeleteAsync();
+                                await message.DeleteAsync();
                                 e.Handled = true;
                             }
-                        }
-                        else
-                        {
-                            numMessage = 100;
+                            else
+                            {
+                                numMessage = -100;
+                            }
                         }
                     }
                 }
