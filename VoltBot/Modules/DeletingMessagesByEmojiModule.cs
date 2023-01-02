@@ -25,13 +25,14 @@ namespace VoltBot.Services
                     $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                 if (e.Guild != null)
                 {
+                    DiscordMessage currentMessage = await e.Channel.GetMessageAsync(e.Message.Id);
                     DiscordMember discordMember = await e.Guild.GetMemberAsync(e.User.Id);
                     if (discordMember.Permissions.HasPermission(Permissions.Administrator) ||
-                        e.Message.ReferencedMessage?.Author.Id == e.User.Id)
+                        currentMessage.ReferencedMessage?.Author.Id == e.User.Id)
                     {
                         List<DiscordMessage> discordMessages = new List<DiscordMessage>();
                         discordMessages.AddRange(await e.Channel.GetMessagesAfterAsync(e.Message.Id, 4));
-                        discordMessages.Add(e.Message);
+                        discordMessages.Add(currentMessage);
                         for (int numMessage = discordMessages.Count - 1; numMessage >= 0; numMessage--)
                         {
                             DiscordMessage message = discordMessages[numMessage];
