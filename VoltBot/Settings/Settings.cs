@@ -10,6 +10,7 @@ namespace VoltBot.Settings
         public string BotToken { get; set; }
         public string BotPrefix { get; set; } = ">volt";
         public string BotDescription { get; set; } = string.Empty;
+        public string VkSecret { get; set; }
 
         #region Instance
         private static Settings settings;
