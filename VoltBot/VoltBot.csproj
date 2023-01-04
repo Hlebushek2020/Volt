@@ -6,8 +6,8 @@
 		<RootNamespace>VoltBot</RootNamespace>
 		<Authors>Sergey Govorunov</Authors>
 		<Copyright>Sergey Govorunov</Copyright>
-		<AssemblyVersion>1.1.0.0</AssemblyVersion>
-		<FileVersion>1.1.0.0</FileVersion>
+		<AssemblyVersion>1.2.0.0</AssemblyVersion>
+		<FileVersion>1.2.0.0</FileVersion>
 		<AssemblyName>Volt_Bot</AssemblyName>
 	</PropertyGroup>
 
