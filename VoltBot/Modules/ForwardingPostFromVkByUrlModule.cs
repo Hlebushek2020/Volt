@@ -71,24 +71,24 @@ namespace VoltBot.Modules
             {
                 post = await _vkApi.Wall.GetByIdAsync(new[] { postId }, true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _defaultLogger.LogWarning(
-                    $"Ошибка парсинга поста из группы VK. id: {postId}, expetion: {e.Message} {e.Source} {e.StackTrace}");
+                _defaultLogger.LogWarning($"Error parsing a post ({postId}) from a VK group", _eventId, ex);
                 return;
             }
 
             if (post?.WallPosts == null || post.WallPosts.Count == 0)
             {
-                _defaultLogger.LogDebug($"Не удалось получить пост VK по ссылке. id: {postId}");
+                _defaultLogger.LogDebug($"Failed to get VK post ({postId}) by link", _eventId);
                 return;
             }
 
             Post wallPost = post.WallPosts.FirstOrDefault();
             Post sourcePost = wallPost;
-            if (wallPost is null)
+            if (wallPost == null)
             {
-                _defaultLogger.LogDebug($"Не удалось получить пост VK по из коллекции WallPosts. id: {postId}");
+                _defaultLogger.LogDebug($"Failed to get VK post from WallPosts collection (original post {postId})",
+                    _eventId);
                 return;
             }
             #endregion
@@ -100,7 +100,7 @@ namespace VoltBot.Modules
             if (wallPost.CopyHistory != null && wallPost.CopyHistory.Count != 0)
             {
                 IReadOnlyCollection<Group> historyGroups = await _vkApi.Groups.GetByIdAsync(
-                    wallPost.CopyHistory.Select(x => Math.Abs((long) x.OwnerId).ToString())
+                    wallPost.CopyHistory.Select(x => Math.Abs((long)x.OwnerId).ToString())
                         .Append(sourcePost.FromId.ToString().Replace("-", string.Empty))
                         .ToList(), null, null);
 
@@ -131,7 +131,7 @@ namespace VoltBot.Modules
                 if (group == null)
                 {
                     _defaultLogger.LogInformation(
-                        $"Не удалось получить информацию об авторе поста VK {wallPost.FromId}");
+                        $"Failed to get information about the author of the VK post ({wallPost.FromId})", _eventId);
                     return;
                 }
 
@@ -145,7 +145,7 @@ namespace VoltBot.Modules
                 if (user == null)
                 {
                     _defaultLogger.LogInformation(
-                        $"Не удалось получить информацию об авторе поста VK {wallPost.FromId}");
+                        $"Failed to get information about the author of the VK post ({wallPost.FromId})", _eventId);
                     return;
                 }
 
@@ -196,7 +196,7 @@ namespace VoltBot.Modules
                         break;
 
                     default:
-                        _defaultLogger.LogDebug($"Неизвестное vk вложение: {attachment.Type.Name}");
+                        _defaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
                         break;
                 }
             }
@@ -368,6 +368,7 @@ namespace VoltBot.Modules
                 await channel.SendMessageAsync(sendingMessage);
             }
             #endregion
+
         }
 
         public string TryGetGroupPostIdFromExportUrl(string msg)
