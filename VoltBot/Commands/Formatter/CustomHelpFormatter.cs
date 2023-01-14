@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using System;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.Entities;
@@ -15,9 +16,11 @@ namespace VoltBot.Commands.Formatter
 
         public CustomHelpFormatter(CommandContext ctx) : base(ctx)
         {
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+
             _embed = new DiscordEmbedBuilder()
                 .WithColor(EmbedConstants.SuccessColor)
-                .WithFooter($"v{Assembly.GetExecutingAssembly().GetName().Version}");
+                .WithFooter($"v{version.Major}.{version.Minor}.{version.Build}");
         }
 
         public override CommandHelpMessage Build()
@@ -35,7 +38,8 @@ namespace VoltBot.Commands.Formatter
                 if (command.Overloads.Count > 1)
                     sb.AppendLine($"**__Вариант {i + 1}__**");
 
-                sb.AppendLine($"```{Settings.Settings.Current.BotPrefix}{command.QualifiedName} {string.Join(' ', commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```\n{command.Description}");
+                sb.AppendLine(
+                    $"```{Settings.Settings.Current.BotPrefix}{command.QualifiedName} {string.Join(' ', commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```\n{command.Description}");
                 sb.AppendLine();
 
                 if (command.Aliases?.Count != 0)
