@@ -9,6 +9,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using VkNet;
+using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.Attachments;
 using VoltBot.Logs;
@@ -163,41 +164,36 @@ namespace VoltBot.Modules
             StringBuilder videoUrls = new StringBuilder();
             foreach (Attachment attachment in wallPost.Attachments)
             {
-                switch (attachment.Type.FullName)
+                if (attachment.Type == typeof(Photo))
                 {
-                    case "VkNet.Model.Attachments.Photo":
-                        Photo photo = attachment.Instance as Photo;
+                    Photo photo = (Photo)attachment.Instance;
 
-                        var size = photo.Sizes.First(x =>
-                            x.Width == photo.Sizes.Max(x => x.Width) && x.Height == photo.Sizes.Max(x => x.Height));
+                    PhotoSize size = photo.Sizes.First(x =>
+                        x.Width == photo.Sizes.Max(x => x.Width) && x.Height == photo.Sizes.Max(x => x.Height));
 
-                        imageUrls.Add(size.Url.AbsoluteUri);
+                    imageUrls.Add(size.Url.AbsoluteUri);
+                }
+                else if (attachment.Type == typeof(Video))
+                {
+                    Video video = (Video)attachment.Instance;
 
-                        break;
+                    videoUrls.Append($"[[**видео**](https://vk.com/video{video.OwnerId}_{video.Id})] ");
+                }
+                else if (attachment.Type == typeof(Poll))
+                {
+                    Poll poll = (Poll)attachment.Instance;
 
-                    case "VkNet.Model.Attachments.Video":
-                        Video video = attachment.Instance as Video;
+                    Tuple<string, string> strPoll = new Tuple<string, string>(
+                        poll.Question,
+                        string.Join(' ',
+                            poll.Answers
+                                .Select(x => $"**{x.Text}** - {x.Votes} ({x.Rate:#.##}%)\n")));
 
-                        videoUrls.Append($"[[**видео**](https://vk.com/video{video.OwnerId}_{video.Id})] ");
-
-                        break;
-
-                    case "VkNet.Model.Attachments.Poll":
-                        Poll poll = attachment.Instance as Poll;
-
-                        Tuple<string, string> strPoll = new Tuple<string, string>(
-                            poll.Question,
-                            string.Join(' ',
-                                poll.Answers
-                                    .Select(x => $"**{x.Text}** - {x.Votes} ({x.Rate:#.##}%)\n")));
-
-                        fields.Add(strPoll);
-
-                        break;
-
-                    default:
-                        _defaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
-                        break;
+                    fields.Add(strPoll);
+                }
+                else
+                {
+                    _defaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
                 }
             }
             #endregion
