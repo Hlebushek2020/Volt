@@ -9,7 +9,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using VkNet;
-using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.Attachments;
 using VoltBot.Logs;
