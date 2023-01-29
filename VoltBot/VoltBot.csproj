@@ -6,8 +6,8 @@
 		<RootNamespace>VoltBot</RootNamespace>
 		<Authors>Sergey Govorunov</Authors>
 		<Copyright>Sergey Govorunov</Copyright>
-		<AssemblyVersion>1.2.0.0</AssemblyVersion>
-		<FileVersion>1.2.0.0</FileVersion>
+		<AssemblyVersion>1.2.1.0</AssemblyVersion>
+		<FileVersion>1.2.1.0</FileVersion>
 		<AssemblyName>Volt_Bot</AssemblyName>
 	</PropertyGroup>
 
@@ -22,8 +22,8 @@
 	</PropertyGroup>-->
 
 	<ItemGroup>
-		<PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01189" />
-		<PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01189" />
+		<PackageReference Include="DSharpPlus" Version="4.3.0" />
+		<PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0" />
 		<PackageReference Include="VkNet" Version="1.72.0" />
 	</ItemGroup>
 
