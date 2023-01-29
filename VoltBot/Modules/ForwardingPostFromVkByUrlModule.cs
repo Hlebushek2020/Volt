@@ -163,38 +163,24 @@ namespace VoltBot.Modules
             StringBuilder videoUrls = new StringBuilder();
             foreach (Attachment attachment in wallPost.Attachments)
             {
-                switch (attachment.Type.FullName)
+                switch (attachment.Instance)
                 {
-                    case "VkNet.Model.Attachments.Photo":
-                        Photo photo = attachment.Instance as Photo;
-
-                        var size = photo.Sizes.First(x =>
-                            x.Width == photo.Sizes.Max(x => x.Width) && x.Height == photo.Sizes.Max(x => x.Height));
-
+                    case Photo photo:
+                        PhotoSize size = photo.Sizes.First(x =>
+                            x.Width == photo.Sizes.Max(y => y.Width) && x.Height == photo.Sizes.Max(y => y.Height));
                         imageUrls.Add(size.Url.AbsoluteUri);
-
                         break;
-
-                    case "VkNet.Model.Attachments.Video":
-                        Video video = attachment.Instance as Video;
-
+                    case Video video:
                         videoUrls.Append($"[[**видео**](https://vk.com/video{video.OwnerId}_{video.Id})] ");
-
                         break;
-
-                    case "VkNet.Model.Attachments.Poll":
-                        Poll poll = attachment.Instance as Poll;
-
+                    case Poll poll:
                         Tuple<string, string> strPoll = new Tuple<string, string>(
                             poll.Question,
                             string.Join(' ',
                                 poll.Answers
                                     .Select(x => $"**{x.Text}** - {x.Votes} ({x.Rate:#.##}%)\n")));
-
                         fields.Add(strPoll);
-
                         break;
-
                     default:
                         _defaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
                         break;
