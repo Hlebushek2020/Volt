@@ -19,18 +19,23 @@ namespace VoltBot.Commands
         [Aliases("r")]
         [Description("Переслать сообщение в другой канал")]
         public async Task Forward(CommandContext ctx,
-            [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
-            [Description("Причина (необязательно)"), RemainingText] string reason = null)
+            [Description("Канал, куда необходимо переслать сообщение")]
+            DiscordChannel targetChannel,
+            [Description("Причина (необязательно)"), RemainingText]
+            string reason = null)
         {
             await Forward(ctx, targetChannel, reason, false, false);
         }
 
         [Command("resend-delete")]
         [Aliases("rd")]
-        [Description("Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
+        [Description(
+            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
         public async Task ForwardAndDeleteOriginal(CommandContext ctx,
-            [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
-            [Description("Причина (необязательно)"), RemainingText] string reason = null)
+            [Description("Канал, куда необходимо переслать сообщение")]
+            DiscordChannel targetChannel,
+            [Description("Причина (необязательно)"), RemainingText]
+            string reason = null)
         {
             await Forward(ctx, targetChannel, reason, true, true);
         }
@@ -57,7 +62,8 @@ namespace VoltBot.Commands
                 DiscordMessage forwardMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
                 discordEmbed.WithColor(EmbedConstants.SuccessColor)
-                    .WithFooter($"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
+                    .WithFooter(
+                        $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
                     .WithDescription(forwardMessage.Content)
                     .WithTitle(null);
 
@@ -91,7 +97,9 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                        if (discordAttachment.MediaType != null &&
+                            discordAttachment.MediaType.StartsWith("image",
+                                StringComparison.InvariantCultureIgnoreCase))
                         {
                             DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
                                 .WithColor(EmbedConstants.SuccessColor)
@@ -136,7 +144,8 @@ namespace VoltBot.Commands
                         DiscordEmbedBuilder dmDiscordEmbed = new DiscordEmbedBuilder()
                             .WithColor(EmbedConstants.WarningColor)
                             .WithTitle("Пересылка сообщения")
-                            .WithDescription($"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
+                            .WithDescription(
+                                $"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
 
                         DiscordMessage discordDmMessage = await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
 
