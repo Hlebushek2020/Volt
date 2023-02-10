@@ -15,6 +15,8 @@ namespace VoltBot.Commands
     [RequireUserPermissions(Permissions.Administrator)]
     internal class AdministratorCommandModule : BaseCommandModule
     {
+        private static readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+
         [Command("resend")]
         [Aliases("r")]
         [Description("Переслать сообщение в другой канал")]
@@ -43,6 +45,8 @@ namespace VoltBot.Commands
         private async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
             string reason, bool notificationAuthor, bool deleteOriginal)
         {
+            EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
+
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
                 .WithColor(EmbedConstants.ErrorColor);
@@ -97,6 +101,9 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
+                        _defaultLogger.LogDebug(eventId,
+                            $"[Attachment] Media Type: {discordAttachment.MediaType ?? "none"}, File Name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
+
                         if (discordAttachment.MediaType != null &&
                             discordAttachment.MediaType.StartsWith("image",
                                 StringComparison.InvariantCultureIgnoreCase))
