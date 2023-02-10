@@ -13,11 +13,12 @@ using VoltBot.Modules;
 
 namespace VoltBot.Services
 {
-    internal class ForwardingMessageByUrlModule : IHandlerModule<MessageCreateEventArgs>
+    internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
     {
-        private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
         private readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
-        private readonly Regex _messagePattern = new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)", RegexOptions.Compiled);
+        private readonly Regex _messagePattern =
+            new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
+                RegexOptions.Compiled);
 
         private Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
         {
@@ -36,7 +37,7 @@ namespace VoltBot.Services
             return null;
         }
 
-        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
+        public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
             Tuple<ulong, ulong, ulong> resendMessageLocation = GetMessageLocation(e.Message.Content);
 
@@ -48,8 +49,9 @@ namespace VoltBot.Services
                 DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
 
                 DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-                    .WithColor(EmbedConstants.SuccessColor)
-                    .WithFooter($"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {resendMessage.CreationTimestamp}")
+                    .WithColor(Constants.SuccessColor)
+                    .WithFooter(
+                        $"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {resendMessage.CreationTimestamp}")
                     .WithDescription(resendMessage.Content);
 
                 if (resendMessage.Author != null)
@@ -72,27 +74,27 @@ namespace VoltBot.Services
                 {
                     foreach (DiscordAttachment discordAttachment in resendMessage.Attachments)
                     {
-                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                        if (discordAttachment.MediaType != null &&
+                            discordAttachment.MediaType.StartsWith("image",
+                                StringComparison.InvariantCultureIgnoreCase))
                         {
                             DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
-                                .WithColor(EmbedConstants.SuccessColor)
+                                .WithColor(Constants.SuccessColor)
                                 .WithImageUrl(discordAttachment.Url);
                             newMessageBuilder.AddEmbed(attacmentEmbed.Build());
                         }
                         else
                         {
-                            if (discordAttachment.FileName != null)
+                            try
                             {
-                                try
-                                {
-                                    HttpClient client = new HttpClient();
-                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
-                                    newMessageBuilder.AddFile(discordAttachment.FileName, fileStream);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _defaultLogger.LogWarning(_eventId, ex, "");
-                                }
+                                HttpClient client = new HttpClient();
+                                Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                                string fileName = discordAttachment.FileName ?? Guid.NewGuid().ToString();
+                                newMessageBuilder.AddFile(fileName, fileStream);
+                            }
+                            catch (Exception ex)
+                            {
+                                _defaultLogger.LogWarning(_eventId, ex, "");
                             }
                         }
                     }
@@ -100,7 +102,8 @@ namespace VoltBot.Services
 
                 DiscordMessage newMessage = await e.Message.RespondAsync(newMessageBuilder);
 
-                await newMessage.CreateReactionAsync(DiscordEmoji.FromName(sender, ":negative_squared_cross_mark:", false));
+                await newMessage.CreateReactionAsync(DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji,
+                    false));
             }
         }
     }

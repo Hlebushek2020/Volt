@@ -17,9 +17,8 @@ using Group = VkNet.Model.Group;
 
 namespace VoltBot.Modules
 {
-    public class ForwardingPostFromVkByUrlModule : IHandlerModule<MessageCreateEventArgs>
+    internal class ForwardingPostFromVkByUrlModule : HandlerModule<MessageCreateEventArgs>
     {
-        private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
         private readonly EventId _eventId = new EventId(0, "Forwarding Post From Vk By Url");
         private readonly VkApi _vkApi = new VkApi();
         private readonly Regex _groupExportLink =
@@ -40,7 +39,7 @@ namespace VoltBot.Modules
             }
         }
 
-        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
+        public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
             if (_vkApi.IsAuthorized)
             {
@@ -206,7 +205,7 @@ namespace VoltBot.Modules
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
                         .WithDescription(repostInfo.ToString())
-                        .WithColor(EmbedConstants.SuccessColor));
+                        .WithColor(Constants.SuccessColor));
                 }
 
                 // 2-nd embed can be splitted in more embeds. Each one contains post text, splitted in chunks
@@ -245,7 +244,7 @@ namespace VoltBot.Modules
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
                         .WithDescription(chunk)
-                        .WithColor(EmbedConstants.SuccessColor));
+                        .WithColor(Constants.SuccessColor));
                 }
 
                 // 3rd embed
@@ -253,7 +252,7 @@ namespace VoltBot.Modules
                 {
                     finalEmbeds.Add(new DiscordEmbedBuilder()
                         .WithDescription(videoUrls.ToString())
-                        .WithColor(EmbedConstants.SuccessColor));
+                        .WithColor(Constants.SuccessColor));
                 }
 
                 firstEmbedWithImageIndex = finalEmbeds.Count - 1;
@@ -276,7 +275,7 @@ namespace VoltBot.Modules
 
                 finalEmbeds.Add(new DiscordEmbedBuilder()
                     .WithDescription(concatedPostMessage.ToString())
-                    .WithColor(EmbedConstants.SuccessColor));
+                    .WithColor(Constants.SuccessColor));
             }
 
             // In case, when post length is less than 4096 symbols topBuilder and bottomBuilder will be the same 
@@ -294,7 +293,7 @@ namespace VoltBot.Modules
                     finalEmbeds.Add(new DiscordEmbedBuilder()
                         .WithImageUrl(imageUrls[i])
                         .WithUrl($"http://vk.com/wall{postId}")
-                        .WithColor(EmbedConstants.SuccessColor));
+                        .WithColor(Constants.SuccessColor));
             }
 
             // bottomBuilder is last one, if:

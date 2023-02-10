@@ -19,7 +19,7 @@ namespace VoltBot.Commands.Formatter
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
             _embed = new DiscordEmbedBuilder()
-                .WithColor(EmbedConstants.SuccessColor)
+                .WithColor(Constants.SuccessColor)
                 .WithFooter($"v{version.Major}.{version.Minor}.{version.Build}");
         }
 

@@ -30,7 +30,7 @@ namespace VoltBot.Commands
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-                .WithColor(EmbedConstants.StatusColor)
+                .WithColor(Constants.StatusColor)
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("Сборка",
                     $"v{version.Major}.{version.Minor}.{version.Build} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")

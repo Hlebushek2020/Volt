@@ -48,7 +48,7 @@ namespace VoltBot.Commands
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
-                .WithColor(EmbedConstants.ErrorColor);
+                .WithColor(Constants.ErrorColor);
 
             if (ctx.Message.Reference == null)
             {
@@ -64,7 +64,7 @@ namespace VoltBot.Commands
             {
                 DiscordMessage forwardMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
-                discordEmbed.WithColor(EmbedConstants.SuccessColor)
+                discordEmbed.WithColor(Constants.SuccessColor)
                     .WithFooter(
                         $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
                     .WithDescription(forwardMessage.Content)
@@ -103,32 +103,17 @@ namespace VoltBot.Commands
                         _defaultLogger.LogDebug(eventId,
                             $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
 
-                        /*if (discordAttachment.MediaType != null &&
-                            discordAttachment.MediaType.StartsWith("image",
-                                StringComparison.InvariantCultureIgnoreCase))
+                        try
                         {
-                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
-                                .WithColor(EmbedConstants.SuccessColor)
-                                .WithImageUrl(discordAttachment.Url);
-                            newMessageBuilder.AddEmbed(attacmentEmbed.Build());
+                            HttpClient client = new HttpClient();
+                            Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                            string fileName = discordAttachment.FileName ?? Guid.NewGuid().ToString();
+                            newMessageBuilder.AddFile(fileName, fileStream);
                         }
-                        else
-                        {*/
-                        if (discordAttachment.Url != null)
+                        catch (Exception ex)
                         {
-                            try
-                            {
-                                HttpClient client = new HttpClient();
-                                Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
-                                string fileName = discordAttachment.FileName ?? Guid.NewGuid().ToString();
-                                newMessageBuilder.AddFile(fileName, fileStream);
-                            }
-                            catch (Exception ex)
-                            {
-                                _defaultLogger.LogWarning(eventId, ex, "");
-                            }
+                            _defaultLogger.LogWarning(eventId, ex, "");
                         }
-                        //}
                     }
                 }
 
@@ -148,14 +133,14 @@ namespace VoltBot.Commands
                         DiscordDmChannel discordDmChannel = await discordMember.CreateDmChannelAsync();
 
                         DiscordEmbedBuilder dmDiscordEmbed = new DiscordEmbedBuilder()
-                            .WithColor(EmbedConstants.WarningColor)
+                            .WithColor(Constants.WarningColor)
                             .WithTitle("Пересылка сообщения")
                             .WithDescription(
                                 $"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
 
                         DiscordMessage discordDmMessage = await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
 
-                        DiscordEmoji emoji = DiscordEmoji.FromName(ctx.Client, ":negative_squared_cross_mark:", false);
+                        DiscordEmoji emoji = DiscordEmoji.FromName(ctx.Client, Constants.DeleteMessageEmoji, false);
                         await discordDmMessage.CreateReactionAsync(emoji);
                     }
                 }

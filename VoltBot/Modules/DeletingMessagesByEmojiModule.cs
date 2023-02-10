@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -10,14 +11,13 @@ using VoltBot.Modules;
 
 namespace VoltBot.Services
 {
-    internal class DeletingMessagesByEmojiModule : IHandlerModule<MessageReactionAddEventArgs>
+    internal class DeletingMessagesByEmojiModule : HandlerModule<MessageReactionAddEventArgs>
     {
-        private readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
         private readonly EventId _eventId = new EventId(0, "Deleting Messages By Emoji");
 
-        public async Task Handler(DiscordClient sender, MessageReactionAddEventArgs e)
+        public override async Task Handler(DiscordClient sender, MessageReactionAddEventArgs e)
         {
-            DiscordEmoji emoji = DiscordEmoji.FromName(sender, ":negative_squared_cross_mark:", false);
+            DiscordEmoji emoji = DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji, false);
 
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
