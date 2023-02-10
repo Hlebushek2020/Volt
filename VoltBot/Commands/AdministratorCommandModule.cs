@@ -7,16 +7,15 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
 
 namespace VoltBot.Commands
 {
+    /// <summary>
+    /// Сommand module containing only those commands that are available to server (guild) administrators
+    /// </summary>
     [RequireUserPermissions(Permissions.Administrator)]
-    internal class AdministratorCommandModule : BaseCommandModule
+    internal class AdministratorCommandModule : VoltCommandModule
     {
-        private static readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-
         [Command("resend")]
         [Aliases("r")]
         [Description("Переслать сообщение в другой канал")]
@@ -102,9 +101,9 @@ namespace VoltBot.Commands
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
                         _defaultLogger.LogDebug(eventId,
-                            $"[Attachment] Media Type: {discordAttachment.MediaType ?? "none"}, File Name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
+                            $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
 
-                        if (discordAttachment.MediaType != null &&
+                        /*if (discordAttachment.MediaType != null &&
                             discordAttachment.MediaType.StartsWith("image",
                                 StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -114,22 +113,22 @@ namespace VoltBot.Commands
                             newMessageBuilder.AddEmbed(attacmentEmbed.Build());
                         }
                         else
+                        {*/
+                        if (discordAttachment.Url != null)
                         {
-                            if (discordAttachment.FileName != null)
+                            try
                             {
-                                try
-                                {
-                                    HttpClient client = new HttpClient();
-                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
-                                    newMessageBuilder.AddFile(discordAttachment.FileName, fileStream);
-                                }
-                                catch (Exception ex)
-                                {
-                                    ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-                                    defaultLogger.LogWarning(new EventId(0, "Command: resend / resend-delete"), ex, "");
-                                }
+                                HttpClient client = new HttpClient();
+                                Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                                string fileName = discordAttachment.FileName ?? Guid.NewGuid().ToString();
+                                newMessageBuilder.AddFile(fileName, fileStream);
+                            }
+                            catch (Exception ex)
+                            {
+                                _defaultLogger.LogWarning(eventId, ex, "");
                             }
                         }
+                        //}
                     }
                 }
 

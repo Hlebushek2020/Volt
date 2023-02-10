@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace VoltBot.Commands
 {
+    /// <summary>
+    /// Command module containing only those commands that are available to the bot owner
+    /// </summary>
     [RequireOwner]
-    internal class OwnerCommandModule : BaseCommandModule
+    internal class OwnerCommandModule : VoltCommandModule
     {
         [Command("shutdown")]
         [Aliases("sd")]
