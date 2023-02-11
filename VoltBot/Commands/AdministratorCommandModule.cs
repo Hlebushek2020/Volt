@@ -42,9 +42,10 @@ namespace VoltBot.Commands
         }
 
         [Command("bug-report")]
-        [Description("Сообщить об ошибке")]
+        [Description(
+            "Сообщить об ошибке. Убедительная просьба прикладывать как можно больше информации об ошибке (действия которые к ней привели, скриншоты и т.д.) к сообщению с данной командой.")]
         public async Task BugReport(CommandContext ctx,
-            [Description("Описание ошибки"), RemainingText]
+            [Description("Описание ошибки (необязательно)"), RemainingText]
             string description)
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
