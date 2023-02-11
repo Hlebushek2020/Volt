@@ -11,28 +11,33 @@ namespace VoltBot.Settings
         public string BotPrefix { get; set; } = ">volt";
         public string BotDescription { get; set; } = string.Empty;
         public string VkSecret { get; set; }
+        public bool BugReport { get; set; } = false;
+        public ulong BugReportChannel { get; set; }
+        public ulong BugReportServer { get; set; }
 
         #region Instance
-        private static Settings settings;
+        private static Settings _settings;
 
         [JsonIgnore]
         public static IReadOnlySettings Current
         {
             get
             {
-                if (settings == null)
+                if (_settings == null)
                 {
-                    string settingsFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "settings.json");
-                    settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
+                    string settingsFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                        "settings.json");
+                    _settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
                 }
-                return settings;
+                return _settings;
             }
         }
         #endregion
 
         public static bool Availability()
         {
-            string settingsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "settings.json");
+            string settingsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                "settings.json");
 
             if (File.Exists(settingsPath))
             {

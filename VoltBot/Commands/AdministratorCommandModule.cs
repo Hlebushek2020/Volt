@@ -41,7 +41,81 @@ namespace VoltBot.Commands
             await Forward(ctx, targetChannel, reason, true, true);
         }
 
-        private async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
+        [Command("bug-report")]
+        [Description("Сообщить об ошибке")]
+        public async Task BugReport(CommandContext ctx,
+            [Description("Описание ошибки"), RemainingText]
+            string description)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithColor(Constants.SuccessColor);
+
+            if (_settings.BugReport)
+            {
+                EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
+                DiscordMessage discordMessage = ctx.Message;
+
+                DiscordEmbedBuilder reportEmbed = new DiscordEmbedBuilder()
+                    .WithColor(Constants.SuccessColor)
+                    .WithTitle("Bug-Report")
+                    .AddField("Author", ctx.User.Username + "#" + ctx.User.Discriminator)
+                    .AddField("Guild", ctx.Guild.Name)
+                    .AddField("Date", discordMessage.CreationTimestamp.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss"));
+
+                if (!string.IsNullOrEmpty(description))
+                {
+                    reportEmbed.AddField("Description", description);
+                }
+
+                DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
+                foreach (DiscordAttachment attachment in discordMessage.Attachments)
+                {
+                    try
+                    {
+                        using HttpClient client = new HttpClient();
+                        Stream fileStream = await client.GetStreamAsync(attachment.Url);
+                        string fileName = attachment.FileName ?? Guid.NewGuid().ToString();
+                        reportMessage.AddFile(fileName, fileStream);
+                    }
+                    catch (Exception ex)
+                    {
+                        _defaultLogger.LogWarning(eventId, ex, "");
+                    }
+                }
+
+                DiscordMessage referencedMessage = discordMessage.ReferencedMessage;
+
+                if (referencedMessage != null)
+                {
+                    if (!string.IsNullOrEmpty(referencedMessage.Content))
+                    {
+                        reportEmbed.AddField("Reference Message", referencedMessage.Content);
+                    }
+
+                    if (referencedMessage.Embeds != null)
+                    {
+                        reportMessage.AddEmbeds(referencedMessage.Embeds);
+                    }
+                }
+
+                DiscordGuild reportGuild = await ctx.Client.GetGuildAsync(_settings.BugReportServer);
+                DiscordChannel reportChannel = reportGuild.GetChannel(_settings.BugReportChannel);
+
+                await reportChannel.SendMessageAsync(reportMessage);
+
+                discordEmbed.WithDescription("Баг-репорт успешно отправлен!");
+            }
+            else
+            {
+                discordEmbed.WithDescription("Эта команда отключена!");
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        #region NOT COMMAND
+        private static async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
             string reason, bool notificationAuthor, bool deleteOriginal)
         {
             EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
@@ -146,5 +220,6 @@ namespace VoltBot.Commands
                 }
             }
         }
+        #endregion
     }
 }
