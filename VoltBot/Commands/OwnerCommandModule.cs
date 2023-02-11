@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace VoltBot.Commands
 {
+    /// <summary>
+    /// Command module containing only those commands that are available to the bot owner
+    /// </summary>
     [RequireOwner]
-    internal class OwnerCommandModule : BaseCommandModule
+    internal class OwnerCommandModule : VoltCommandModule
     {
         [Command("shutdown")]
         [Aliases("sd")]
@@ -27,7 +30,7 @@ namespace VoltBot.Commands
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-                .WithColor(EmbedConstants.StatusColor)
+                .WithColor(Constants.StatusColor)
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("Сборка",
                     $"v{version.Major}.{version.Minor}.{version.Build} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")

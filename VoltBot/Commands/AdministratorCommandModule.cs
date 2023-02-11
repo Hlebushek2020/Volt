@@ -7,30 +7,36 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
 
 namespace VoltBot.Commands
 {
+    /// <summary>
+    /// Сommand module containing only those commands that are available to server (guild) administrators
+    /// </summary>
     [RequireUserPermissions(Permissions.Administrator)]
-    internal class AdministratorCommandModule : BaseCommandModule
+    internal class AdministratorCommandModule : VoltCommandModule
     {
         [Command("resend")]
         [Aliases("r")]
         [Description("Переслать сообщение в другой канал")]
         public async Task Forward(CommandContext ctx,
-            [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
-            [Description("Причина (необязательно)"), RemainingText] string reason = null)
+            [Description("Канал, куда необходимо переслать сообщение")]
+            DiscordChannel targetChannel,
+            [Description("Причина (необязательно)"), RemainingText]
+            string reason = null)
         {
             await Forward(ctx, targetChannel, reason, false, false);
         }
 
         [Command("resend-delete")]
         [Aliases("rd")]
-        [Description("Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
+        [Description(
+            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
         public async Task ForwardAndDeleteOriginal(CommandContext ctx,
-            [Description("Канал, куда необходимо переслать сообщение")] DiscordChannel targetChannel,
-            [Description("Причина (необязательно)"), RemainingText] string reason = null)
+            [Description("Канал, куда необходимо переслать сообщение")]
+            DiscordChannel targetChannel,
+            [Description("Причина (необязательно)"), RemainingText]
+            string reason = null)
         {
             await Forward(ctx, targetChannel, reason, true, true);
         }
@@ -38,9 +44,11 @@ namespace VoltBot.Commands
         private async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
             string reason, bool notificationAuthor, bool deleteOriginal)
         {
+            EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
+
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
-                .WithColor(EmbedConstants.ErrorColor);
+                .WithColor(Constants.ErrorColor);
 
             if (ctx.Message.Reference == null)
             {
@@ -56,8 +64,9 @@ namespace VoltBot.Commands
             {
                 DiscordMessage forwardMessage = await ctx.Channel.GetMessageAsync(ctx.Message.Reference.Message.Id);
 
-                discordEmbed.WithColor(EmbedConstants.SuccessColor)
-                    .WithFooter($"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
+                discordEmbed.WithColor(Constants.SuccessColor)
+                    .WithFooter(
+                        $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
                     .WithDescription(forwardMessage.Content)
                     .WithTitle(null);
 
@@ -91,29 +100,19 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        if (discordAttachment.MediaType.StartsWith("image", StringComparison.InvariantCultureIgnoreCase))
+                        _defaultLogger.LogDebug(eventId,
+                            $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
+
+                        try
                         {
-                            DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
-                                .WithColor(EmbedConstants.SuccessColor)
-                                .WithImageUrl(discordAttachment.Url);
-                            newMessageBuilder.AddEmbed(attacmentEmbed.Build());
+                            HttpClient client = new HttpClient();
+                            Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
+                            string fileName = discordAttachment.FileName ?? Guid.NewGuid().ToString();
+                            newMessageBuilder.AddFile(fileName, fileStream);
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            if (discordAttachment.FileName != null)
-                            {
-                                try
-                                {
-                                    HttpClient client = new HttpClient();
-                                    Stream fileStream = await client.GetStreamAsync(discordAttachment.Url);
-                                    newMessageBuilder.AddFile(discordAttachment.FileName, fileStream);
-                                }
-                                catch (Exception ex)
-                                {
-                                    ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-                                    defaultLogger.LogWarning(new EventId(0, "Command: resend / resend-delete"), ex, "");
-                                }
-                            }
+                            _defaultLogger.LogWarning(eventId, ex, "");
                         }
                     }
                 }
@@ -134,13 +133,14 @@ namespace VoltBot.Commands
                         DiscordDmChannel discordDmChannel = await discordMember.CreateDmChannelAsync();
 
                         DiscordEmbedBuilder dmDiscordEmbed = new DiscordEmbedBuilder()
-                            .WithColor(EmbedConstants.WarningColor)
+                            .WithColor(Constants.WarningColor)
                             .WithTitle("Пересылка сообщения")
-                            .WithDescription($"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
+                            .WithDescription(
+                                $"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
 
                         DiscordMessage discordDmMessage = await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
 
-                        DiscordEmoji emoji = DiscordEmoji.FromName(ctx.Client, ":negative_squared_cross_mark:", false);
+                        DiscordEmoji emoji = DiscordEmoji.FromName(ctx.Client, Constants.DeleteMessageEmoji, false);
                         await discordDmMessage.CreateReactionAsync(emoji);
                     }
                 }
