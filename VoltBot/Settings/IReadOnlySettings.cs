@@ -1,10 +1,13 @@
 ﻿namespace VoltBot.Settings
 {
-    internal interface IReadOnlySettings
+    public interface IReadOnlySettings
     {
-        public string BotToken { get; }
-        public string BotPrefix { get; }
-        public string BotDescription { get; }
-        public string VkSecret { get; }
+        string BotToken { get; }
+        string BotPrefix { get; }
+        string BotDescription { get; }
+        string VkSecret { get; }
+        bool BugReport { get; }
+        ulong BugReportChannel { get; }
+        ulong BugReportServer { get; }
     }
 }
