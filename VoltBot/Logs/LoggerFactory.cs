@@ -29,16 +29,16 @@ namespace VoltBot.Logs
         {
             if (typeof(BaseDiscordClient).FullName.Equals(categoryName))
             {
-                categoryName = typeof(DiscordClientLoggerProvider).Name;
+                categoryName = nameof(DiscordClientLoggerProvider);
             }
             if (_providers.ContainsKey(categoryName))
             {
                 return _providers[categoryName].CreateLogger(categoryName);
             }
-            string defaultProviderName = typeof(DefaultLoggerProvider).Name;
+            const string defaultProviderName = nameof(DefaultLoggerProvider);
             if (!_providers.ContainsKey(defaultProviderName))
             {
-                _providers.Add(defaultProviderName, new DefaultLoggerProvider());
+                _providers.Add(defaultProviderName, new DefaultLoggerProvider(Settings.Settings.Current.BotLogLevel));
             }
             return _providers[defaultProviderName].CreateLogger(defaultProviderName);
         }

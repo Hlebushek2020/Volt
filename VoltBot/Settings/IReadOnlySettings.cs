@@ -1,4 +1,6 @@
-﻿namespace VoltBot.Settings
+﻿using Microsoft.Extensions.Logging;
+
+namespace VoltBot.Settings
 {
     public interface IReadOnlySettings
     {
@@ -9,5 +11,7 @@
         bool BugReport { get; }
         ulong BugReportChannel { get; }
         ulong BugReportServer { get; }
+        LogLevel DiscordApiLogLevel { get; }
+        LogLevel BotLogLevel { get; }
     }
 }
