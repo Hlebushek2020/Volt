@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace VoltBot.Settings
 {
@@ -14,6 +15,8 @@ namespace VoltBot.Settings
         public bool BugReport { get; set; } = false;
         public ulong BugReportChannel { get; set; }
         public ulong BugReportServer { get; set; }
+        public LogLevel DiscordApiLogLevel { get; set; } = LogLevel.Information;
+        public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
 
         #region Instance
         private static Settings _settings;

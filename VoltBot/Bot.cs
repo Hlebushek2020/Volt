@@ -13,6 +13,7 @@ using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Modules;
 using VoltBot.Services;
+using VoltBot.Settings;
 
 namespace VoltBot
 {
@@ -47,15 +48,17 @@ namespace VoltBot
 
         public Bot()
         {
+            IReadOnlySettings settings = Settings.Settings.Current;
+
             LoggerFactory loggerFactory = LoggerFactory.Current;
-            loggerFactory.AddProvider(new DiscordClientLoggerProvider(LogLevel.Error));
+            loggerFactory.AddProvider(new DiscordClientLoggerProvider(settings.DiscordApiLogLevel));
             _defaultLogger = loggerFactory.CreateLogger<DefaultLoggerProvider>();
 
             _defaultLogger.LogInformation(new EventId(0, "Init"), "Initializing discord client");
 
             _discordClient = new DiscordClient(new DiscordConfiguration
             {
-                Token = Settings.Settings.Current.BotToken,
+                Token = settings.BotToken,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
                 LoggerFactory = loggerFactory
@@ -90,7 +93,7 @@ namespace VoltBot
             commands.RegisterCommands<AdministratorCommandModule>();
         }
 
-        private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+        private static async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
             await sender.UpdateStatusAsync(new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help",
                 ActivityType.Watching));
 

@@ -15,11 +15,15 @@ namespace VoltBot.Logs.Loggers
             _logWriter = logWriter;
         }
 
-        public IDisposable BeginScope<TState>(TState state) { return null; }
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            return null;
+        }
 
         public bool IsEnabled(LogLevel logLevel) => logLevel >= MinimumLevel;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+            Func<TState, Exception, string> formatter)
         {
             if (IsEnabled(logLevel) && !_logWriter.IsDisposable)
             {

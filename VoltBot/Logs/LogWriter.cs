@@ -12,14 +12,17 @@ namespace VoltBot.Logs
         public const string FileNameFormat = "yyyy_MM_dd";
         public const string LogDateTimeFormatter = "dd.MM.yyyy HH:mm:ss";
 
-        private static readonly ConcurrentDictionary<string, LogWriter> _logWritters = new ConcurrentDictionary<string, LogWriter>();
+        private static readonly ConcurrentDictionary<string, LogWriter> _logWritters =
+            new ConcurrentDictionary<string, LogWriter>();
 
         public bool IsDisposable { get; private set; } = false;
 
         private readonly StreamWriter _fileLog;
         private readonly string _postFix;
 
-        private LogWriter() { }
+        private LogWriter()
+        {
+        }
 
         private LogWriter(string postFix)
         {
@@ -37,9 +40,11 @@ namespace VoltBot.Logs
             _logWritters.TryRemove(_postFix, out _);
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+            Func<TState, Exception, string> formatter)
         {
-            string log = $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {(eventId.Name != null ? eventId.Name : "none")}";
+            string log =
+                $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {(eventId.Name != null ? eventId.Name : "none")}";
 
             string formatedMessage = formatter(state, exception);
             if (!string.IsNullOrEmpty(formatedMessage))
