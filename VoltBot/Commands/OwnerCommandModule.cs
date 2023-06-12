@@ -1,10 +1,10 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 
 namespace VoltBot.Commands
 {
@@ -34,7 +34,8 @@ namespace VoltBot.Commands
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("DSharpPlus", $"v{ctx.Client.VersionString}")
                 .AddField("Сборка",
-                    $"v{version.Major}.{version.Minor}.{version.Build} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
+                    $"v{version.Major}.{version.Minor}.{version.Build} {
+                        File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
                 .AddField("Дата запуска",
                     $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
 

@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace VoltBot.Logs
 {
@@ -20,9 +20,7 @@ namespace VoltBot.Logs
         private readonly StreamWriter _fileLog;
         private readonly string _postFix;
 
-        private LogWriter()
-        {
-        }
+        private LogWriter() { }
 
         private LogWriter(string postFix)
         {
@@ -40,11 +38,16 @@ namespace VoltBot.Logs
             _logWritters.TryRemove(_postFix, out _);
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception,
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception exception,
             Func<TState, Exception, string> formatter)
         {
             string log =
-                $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {(eventId.Name != null ? eventId.Name : "none")}";
+                $"[{DateTime.Now.ToString(LogDateTimeFormatter)}] {logLevel.ToString().ToUpper()}; {
+                    (eventId.Name != null ? eventId.Name : "none")}";
 
             string formatedMessage = formatter(state, exception);
             if (!string.IsNullOrEmpty(formatedMessage))

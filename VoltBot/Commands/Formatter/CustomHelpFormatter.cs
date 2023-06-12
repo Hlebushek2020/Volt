@@ -1,12 +1,12 @@
 ﻿using System;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Converters;
-using DSharpPlus.CommandsNext.Entities;
-using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Converters;
+using DSharpPlus.CommandsNext.Entities;
+using DSharpPlus.Entities;
 
 namespace VoltBot.Commands.Formatter
 {
@@ -23,10 +23,7 @@ namespace VoltBot.Commands.Formatter
                 .WithFooter($"v{version.Major}.{version.Minor}.{version.Build}");
         }
 
-        public override CommandHelpMessage Build()
-        {
-            return new CommandHelpMessage(embed: _embed);
-        }
+        public override CommandHelpMessage Build() { return new CommandHelpMessage(embed: _embed); }
 
         public override BaseHelpFormatter WithCommand(Command command)
         {
@@ -39,7 +36,9 @@ namespace VoltBot.Commands.Formatter
                     sb.AppendLine($"**__Вариант {i + 1}__**");
 
                 sb.AppendLine(
-                    $"```{Settings.Settings.Current.BotPrefix}{command.QualifiedName} {string.Join(' ', commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```\n{command.Description}");
+                    $"```{Settings.Settings.Current.BotPrefix}{command.QualifiedName} {
+                        string.Join(' ', commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```\n{
+                            command.Description}");
                 sb.AppendLine();
 
                 if (command.Aliases?.Count != 0)

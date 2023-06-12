@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
 using VoltBot.Modules;
 
 namespace VoltBot.Services
@@ -22,7 +19,8 @@ namespace VoltBot.Services
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
                 _defaultLogger.LogInformation(_eventId,
-                    $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                    $"{e.User.Username}#{e.User.Discriminator}{
+                        (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                 if (e.Guild != null)
                 {
                     DiscordMessage currentMessage = await e.Channel.GetMessageAsync(e.Message.Id);

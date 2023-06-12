@@ -1,14 +1,12 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
+using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Logging;
 using VoltBot.Modules;
 
 namespace VoltBot.Services
@@ -16,6 +14,7 @@ namespace VoltBot.Services
     internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
     {
         private readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
+
         private readonly Regex _messagePattern =
             new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
                 RegexOptions.Compiled);
@@ -51,7 +50,8 @@ namespace VoltBot.Services
                 DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                     .WithColor(Constants.SuccessColor)
                     .WithFooter(
-                        $"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {resendMessage.CreationTimestamp}")
+                        $"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {
+                            resendMessage.CreationTimestamp}")
                     .WithDescription(resendMessage.Content);
 
                 if (resendMessage.Author != null)

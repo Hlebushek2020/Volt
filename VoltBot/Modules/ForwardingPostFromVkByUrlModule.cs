@@ -11,8 +11,6 @@ using Microsoft.Extensions.Logging;
 using VkNet;
 using VkNet.Model;
 using VkNet.Model.Attachments;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
 using Group = VkNet.Model.Group;
 
 namespace VoltBot.Modules
@@ -21,8 +19,10 @@ namespace VoltBot.Modules
     {
         private readonly EventId _eventId = new EventId(0, "Forwarding Post From Vk By Url");
         private readonly VkApi _vkApi = new VkApi();
+
         private readonly Regex _groupExportLink =
             new Regex(@"(?<!\\)https:\/\/vk.com\/wall(-?\d+)_(\d+)", RegexOptions.Compiled);
+
         private readonly Regex _groupNormalLink =
             new Regex(@"(?<!\\)https:\/\/vk.com\/.*w=wall(-?\d+)_(\d+)", RegexOptions.Compiled);
 
@@ -52,13 +52,17 @@ namespace VoltBot.Modules
                 if (!string.IsNullOrWhiteSpace(id))
                 {
                     _defaultLogger.LogInformation(_eventId,
-                        $"{e.Message.Author.Username}#{e.Message.Author.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                        $"{e.Message.Author.Username}#{e.Message.Author.Discriminator}{
+                            (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
                     await ParseGroupPost(id, deleteEmoji, e.Message, e.Channel);
                 }
             }
         }
 
-        private async Task ParseGroupPost(string postId, DiscordEmoji deleteEmoji, DiscordMessage originalMessage,
+        private async Task ParseGroupPost(
+            string postId,
+            DiscordEmoji deleteEmoji,
+            DiscordMessage originalMessage,
             DiscordChannel channel)
         {
             // Group id starts from -
@@ -99,7 +103,7 @@ namespace VoltBot.Modules
             if (wallPost.CopyHistory != null && wallPost.CopyHistory.Count != 0)
             {
                 IReadOnlyCollection<Group> historyGroups = await _vkApi.Groups.GetByIdAsync(
-                    wallPost.CopyHistory.Select(x => Math.Abs((long)x.OwnerId).ToString())
+                    wallPost.CopyHistory.Select(x => Math.Abs((long) x.OwnerId).ToString())
                         .Append(sourcePost.FromId.ToString().Replace("-", string.Empty))
                         .ToList(), null, null);
 
@@ -109,7 +113,8 @@ namespace VoltBot.Modules
                 {
                     Post repost = wallPost.CopyHistory[i];
                     repostInfo.AppendLine(
-                        $"{new string('➦', i + 1)} *repost from [**{historyGroups.ElementAt(i).Name}**](http://vk.com/wall{repost.FromId}_{repost.Id})*");
+                        $"{new string('➦', i + 1)} *repost from [**{historyGroups.ElementAt(i).Name
+                        }**](http://vk.com/wall{repost.FromId}_{repost.Id})*");
                     if (!string.IsNullOrEmpty(repost.Text))
                         repostInfo.AppendLine(repost.Text);
                     repostInfo.AppendLine();
@@ -155,8 +160,6 @@ namespace VoltBot.Modules
             #endregion
 
             #region Attachments
-            bool hasImage = false;
-            int imgCount = 0;
             List<string> imageUrls = new List<string>();
             List<Tuple<string, string>> fields = new List<Tuple<string, string>>();
             StringBuilder videoUrls = new StringBuilder();
@@ -232,7 +235,7 @@ namespace VoltBot.Modules
                         startIndex = endIndex;
                     } while (postMessage.Length - endIndex > 4096);
 
-                    string finalStrChunk = postMessage.Substring(endIndex);
+                    string finalStrChunk = postMessage[endIndex..];
                     messageChunks.Add(finalStrChunk);
                 }
                 else
@@ -240,12 +243,8 @@ namespace VoltBot.Modules
                     messageChunks.Add(postMessage);
                 }
 
-                foreach (string chunk in messageChunks)
-                {
-                    finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(chunk)
-                        .WithColor(Constants.SuccessColor));
-                }
+                finalEmbeds.AddRange(messageChunks.Select(chunk => new DiscordEmbedBuilder().WithDescription(chunk)
+                    .WithColor(Constants.SuccessColor)));
 
                 // 3rd embed
                 if (videoUrls.Length != 0)
@@ -309,7 +308,8 @@ namespace VoltBot.Modules
 
             bottomBuilder
                 .WithFooter(
-                    $"Лайков: {sourcePost.Likes.Count}, Репостов: {sourcePost.Reposts.Count}, Просмотров: {sourcePost.Views.Count}",
+                    $"Лайков: {sourcePost.Likes.Count}, Репостов: {sourcePost.Reposts.Count}, Просмотров: {
+                        sourcePost.Views.Count}",
                     @"https://vk.com/images/icons/favicons/fav_logo.ico")
                 .WithTimestamp(sourcePost.Date);
 

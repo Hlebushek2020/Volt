@@ -8,10 +8,7 @@ namespace VoltBot.Logs.Providers
         private readonly LogLevel _minimumLevel;
         private FileLogger _logger;
 
-        public DefaultLoggerProvider(LogLevel minimumLevel = LogLevel.Information)
-        {
-            _minimumLevel = minimumLevel;
-        }
+        public DefaultLoggerProvider(LogLevel minimumLevel = LogLevel.Information) { _minimumLevel = minimumLevel; }
 
         public ILogger CreateLogger(string categoryName)
         {
