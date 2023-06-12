@@ -39,7 +39,7 @@ namespace VoltBot.Services
                             if (message.Author.Id.Equals(sender.CurrentUser.Id))
                             {
                                 await message.DeleteAsync();
-                                e.Handled = true;
+                                //e.Handled = true;
                             }
                             else
                             {
@@ -51,7 +51,7 @@ namespace VoltBot.Services
                 else
                 {
                     await e.Message.DeleteAsync();
-                    e.Handled = true;
+                    //e.Handled = true;
                 }
             }
         }
