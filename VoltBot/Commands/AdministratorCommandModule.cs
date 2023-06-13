@@ -79,12 +79,13 @@ namespace VoltBot.Commands
                         .AddField("Date",
                             discordMessage.CreationTimestamp.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss"));
 
+                    DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
+
                     if (!string.IsNullOrEmpty(description))
                     {
-                        reportEmbed.AddField("Description", description);
+                        reportMessage.WithContent(description);
                     }
 
-                    DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
                     foreach (DiscordAttachment attachment in discordMessage.Attachments)
                     {
                         try
