@@ -162,8 +162,7 @@ namespace VoltBot.Commands
                     .WithFooter(
                         $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {
                             forwardMessage.CreationTimestamp}")
-                    .WithDescription(forwardMessage.Content)
-                    .WithTitle(null);
+                    .WithDescription(forwardMessage.Content);
 
                 if (!string.IsNullOrEmpty(reason))
                 {
