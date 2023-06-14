@@ -1,14 +1,11 @@
-﻿using DSharpPlus;
+﻿using System;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
-using VoltBot.Modules;
 
-namespace VoltBot.Services
+namespace VoltBot.Modules
 {
     internal class BotPingModule : HandlerModule<MessageCreateEventArgs>
     {

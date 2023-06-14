@@ -27,16 +27,12 @@ namespace VoltBot.Commands
         [Description("Сведения о боте")]
         public async Task Status(CommandContext ctx)
         {
-            //Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyInformationalVersionAttribute>()
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithColor(Constants.StatusColor)
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("DSharpPlus", $"v{ctx.Client.VersionString}")
                 .AddField("Сборка",
-                    $"v{version.Major}.{version.Minor}.{version.Build} {
-                        File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
+                    $"v{Program.Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
                 .AddField("Дата запуска",
                     $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
 

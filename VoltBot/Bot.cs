@@ -1,23 +1,22 @@
-﻿using DSharpPlus;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using VoltBot.Commands;
 using VoltBot.Commands.Formatter;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Modules;
-using VoltBot.Services;
 using VoltBot.Settings;
 
 namespace VoltBot
 {
-    public class Bot : IDisposable
+    public sealed class Bot : IDisposable
     {
         public DateTime StartDateTime { get; private set; }
 
@@ -41,10 +40,6 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
-        private readonly ForwardingMessageByUrlModule _forwardingMessageByUrl;
-        private readonly ForwardingPostFromVkByUrlModule _forwardingPostFromVkByUrl;
-        private readonly BotPingModule _botPingService;
-        private readonly DeletingMessagesByEmojiModule _deletingMessagesByEmoji;
 
         public Bot()
         {
@@ -67,17 +62,10 @@ namespace VoltBot
             _discordClient.Ready += DiscordClient_Ready;
             _discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            _forwardingMessageByUrl = new ForwardingMessageByUrlModule();
-            _discordClient.MessageCreated += _forwardingMessageByUrl.Handler;
-
-            _forwardingPostFromVkByUrl = new ForwardingPostFromVkByUrlModule();
-            _discordClient.MessageCreated += _forwardingPostFromVkByUrl.Handler;
-
-            _botPingService = new BotPingModule();
-            _discordClient.MessageCreated += _botPingService.Handler;
-
-            _deletingMessagesByEmoji = new DeletingMessagesByEmojiModule();
-            _discordClient.MessageReactionAdded += _deletingMessagesByEmoji.Handler;
+            _discordClient.MessageCreated += new ForwardingMessageByUrlModule().Handler;
+            _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
+            _discordClient.MessageCreated += new BotPingModule().Handler;
+            _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -181,7 +169,7 @@ namespace VoltBot
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_isDisposed)
             {

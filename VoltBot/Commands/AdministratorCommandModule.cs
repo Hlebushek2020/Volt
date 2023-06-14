@@ -81,9 +81,10 @@ namespace VoltBot.Commands
 
                     DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
 
-                    if (!string.IsNullOrEmpty(description))
+                    bool hasDescription = !string.IsNullOrEmpty(description);
+                    if (hasDescription)
                     {
-                        reportMessage.WithContent(description);
+                        reportMessage.WithContent($"**Description:** {description}");
                     }
 
                     foreach (DiscordAttachment attachment in discordMessage.Attachments)
@@ -105,7 +106,17 @@ namespace VoltBot.Commands
                     {
                         if (!string.IsNullOrEmpty(referencedMessage.Content))
                         {
-                            reportEmbed.AddField("Reference Message", referencedMessage.Content);
+                            string referencedMessageContent = referencedMessage.Content;
+                            if (hasDescription)
+                            {
+                                if (referencedMessageContent.Length > 1024)
+                                    referencedMessageContent = referencedMessageContent[..1024];
+                                reportEmbed.AddField("Reference Message", referencedMessageContent);
+                            }
+                            else
+                            {
+                                reportMessage.WithContent($"**Reference Message:** {referencedMessageContent}");
+                            }
                         }
 
                         if (referencedMessage.Embeds != null)

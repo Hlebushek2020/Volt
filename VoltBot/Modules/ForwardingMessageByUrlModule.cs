@@ -7,9 +7,8 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using VoltBot.Modules;
 
-namespace VoltBot.Services
+namespace VoltBot.Modules
 {
     internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
     {

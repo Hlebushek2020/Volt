@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net7.0</TargetFramework>
-		<RootNamespace>VoltBot</RootNamespace>
-		<Authors>Sergey Govorunov</Authors>
-		<Copyright>Sergey Govorunov</Copyright>
-		<AssemblyVersion>2.0.0.0</AssemblyVersion>
-		<FileVersion>2.0.0.0</FileVersion>
-		<InformationalVersion>2.0.0-alpha</InformationalVersion>
-		<AssemblyName>Volt_Bot</AssemblyName>
-	</PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+        <RootNamespace>VoltBot</RootNamespace>
+        <Authors>Sergey Govorunov</Authors>
+        <Copyright>Sergey Govorunov</Copyright>
+        <AssemblyVersion>2.0.0.0</AssemblyVersion>
+        <FileVersion>2.0.0.0</FileVersion>
+        <InformationalVersion>2.0.0-alpha-r1</InformationalVersion>
+        <AssemblyName>Volt_Bot</AssemblyName>
+    </PropertyGroup>
 
-	<!--<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <!--<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 		<OutputPath>$(SolutionDir)/build/bin/Debug</OutputPath>
 		<IntermediateOutputPath>$(SolutionDir)/build/obj/Debug</IntermediateOutputPath>
 	</PropertyGroup>
@@ -22,10 +22,10 @@
 		<IntermediateOutputPath>$(SolutionDir)/build/obj/Release</IntermediateOutputPath>
 	</PropertyGroup>-->
 
-	<ItemGroup>
-		<PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01582" />
-		<PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01582" />
-		<PackageReference Include="VkNet" Version="1.74.0" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01582" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01582" />
+        <PackageReference Include="VkNet" Version="1.74.0" />
+    </ItemGroup>
 
 </Project>

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
@@ -16,11 +14,9 @@ namespace VoltBot.Commands.Formatter
 
         public CustomHelpFormatter(CommandContext ctx) : base(ctx)
         {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-
             _embed = new DiscordEmbedBuilder()
                 .WithColor(Constants.SuccessColor)
-                .WithFooter($"v{version.Major}.{version.Minor}.{version.Build}");
+                .WithFooter($"v{Program.Version}");
         }
 
         public override CommandHelpMessage Build() { return new CommandHelpMessage(embed: _embed); }
@@ -74,15 +70,15 @@ namespace VoltBot.Commands.Formatter
                     {
                         commandSb.Append("; ");
                     }
-                    commandSb.Append("`");
+                    commandSb.Append('`');
                     commandSb.Append(command.Name);
                     if (command.Aliases.Count > 0)
                     {
                         commandSb.Append(" (");
                         commandSb.AppendJoin(", ", command.Aliases);
-                        commandSb.Append(")");
+                        commandSb.Append(')');
                     }
-                    commandSb.Append("`");
+                    commandSb.Append('`');
                 }
             }
             _embed.WithTitle("help")
