@@ -27,6 +27,7 @@ namespace VoltBot.Commands
         [Description("Сведения о боте")]
         public async Task Status(CommandContext ctx)
         {
+            //Assembly.GetExecutingAssembly().GetCustomAttributes<AssemblyInformationalVersionAttribute>()
             Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
