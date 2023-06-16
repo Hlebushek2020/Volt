@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -194,11 +196,37 @@ namespace VoltBot.Commands
 
                 DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
 
-                newMessageBuilder.AddEmbed(discordEmbed);
+                List<DiscordEmbed> embeds = new List<DiscordEmbed> { discordEmbed };
 
+                bool hasAttacmentLinks = false;
                 if (forwardMessage.Embeds?.Count > 0)
                 {
-                    newMessageBuilder.AddEmbeds(forwardMessage.Embeds);
+                    StringBuilder attacmentsLinks = new StringBuilder();
+                    foreach (DiscordEmbed forwardMessageEmbed in forwardMessage.Embeds)
+                    {
+                        if (forwardMessageEmbed.Url != null &&
+                            forwardMessageEmbed.Url.AbsoluteUri.StartsWith("https://cdn.discordapp.com/attachments"))
+                        {
+                            if (attacmentsLinks.Length > 0)
+                                attacmentsLinks.AppendLine();
+                            attacmentsLinks.Append(forwardMessageEmbed.Url.AbsoluteUri);
+                        }
+                        else
+                        {
+                            embeds.Add(forwardMessageEmbed);
+                        }
+                    }
+
+                    if (attacmentsLinks.Length > 0)
+                    {
+                        newMessageBuilder.WithContent(attacmentsLinks.ToString());
+                        hasAttacmentLinks = true;
+                    }
+                }
+
+                if (!hasAttacmentLinks)
+                {
+                    newMessageBuilder.AddEmbeds(embeds);
                 }
 
                 if (forwardMessage.Attachments?.Count > 0)
@@ -224,6 +252,10 @@ namespace VoltBot.Commands
                 }
 
                 DiscordMessage newMessage = await targetChannel.SendMessageAsync(newMessageBuilder);
+                if (hasAttacmentLinks)
+                {
+                    await newMessage.RespondAsync(new DiscordMessageBuilder().AddEmbeds(embeds));
+                }
 
                 await ctx.Message.DeleteAsync();
                 if (deleteOriginal)
