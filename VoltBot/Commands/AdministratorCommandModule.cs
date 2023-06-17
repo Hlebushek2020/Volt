@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -195,10 +194,10 @@ namespace VoltBot.Commands
                 }
 
                 DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
+                DiscordMessageBuilder newMessageLinksBuilder = null;
 
-                List<DiscordEmbed> embeds = new List<DiscordEmbed> { discordEmbed };
+                newMessageBuilder.AddEmbed(discordEmbed);
 
-                bool hasAttacmentLinks = false;
                 if (forwardMessage.Embeds?.Count > 0)
                 {
                     StringBuilder attacmentsLinks = new StringBuilder();
@@ -213,20 +212,15 @@ namespace VoltBot.Commands
                         }
                         else
                         {
-                            embeds.Add(forwardMessageEmbed);
+                            newMessageBuilder.AddEmbed(forwardMessageEmbed);
                         }
                     }
 
                     if (attacmentsLinks.Length > 0)
                     {
-                        newMessageBuilder.WithContent(attacmentsLinks.ToString());
-                        hasAttacmentLinks = true;
+                        newMessageLinksBuilder = new DiscordMessageBuilder()
+                            .WithContent(attacmentsLinks.ToString());
                     }
-                }
-
-                if (!hasAttacmentLinks)
-                {
-                    newMessageBuilder.AddEmbeds(embeds);
                 }
 
                 if (forwardMessage.Attachments?.Count > 0)
@@ -252,9 +246,9 @@ namespace VoltBot.Commands
                 }
 
                 DiscordMessage newMessage = await targetChannel.SendMessageAsync(newMessageBuilder);
-                if (hasAttacmentLinks)
+                if (newMessageLinksBuilder != null)
                 {
-                    await newMessage.RespondAsync(new DiscordMessageBuilder().AddEmbeds(embeds));
+                    await newMessage.RespondAsync(newMessageLinksBuilder);
                 }
 
                 await ctx.Message.DeleteAsync();
