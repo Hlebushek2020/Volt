@@ -23,17 +23,7 @@ namespace VoltBot
         #region Instance
         private static Bot _bot;
 
-        public static Bot Current
-        {
-            get
-            {
-                if (_bot == null)
-                {
-                    _bot = new Bot();
-                }
-                return _bot;
-            }
-        }
+        public static Bot Current => _bot ??= new Bot();
         #endregion
 
         private volatile bool _isRunning = false;
@@ -66,6 +56,7 @@ namespace VoltBot
             _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
             _discordClient.MessageCreated += new BotPingModule().Handler;
             _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
+            _discordClient.Ready += new BotReadyNotificationsModule().Handler;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -85,11 +76,10 @@ namespace VoltBot
             await sender.UpdateStatusAsync(new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help",
                 ActivityType.Watching));
 
-        private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
+        private async Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
         {
             _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, "");
-            Environment.Exit(1);
-            return Task.CompletedTask;
+            await Restart();
         }
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
@@ -161,6 +151,18 @@ namespace VoltBot
             }
 
             _isRunning = false;
+        }
+
+        private async Task Restart()
+        {
+            EventId eventId = new EventId(0, "Restart");
+            _defaultLogger.LogInformation(eventId, "Restart");
+
+            _defaultLogger.LogInformation(eventId, "Disconnect discord client");
+            await _discordClient.DisconnectAsync();
+
+            _defaultLogger.LogInformation(eventId, "Discord client connect");
+            await _discordClient.ConnectAsync();
         }
 
         public void Dispose()

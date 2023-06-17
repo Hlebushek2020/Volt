@@ -142,6 +142,46 @@ namespace VoltBot.Commands
             await ctx.RespondAsync(discordEmbed);
         }
 
+        [Command("ready-notification")]
+        [Description("Bot ready notification")]
+        public async Task ReadyNotification(
+            CommandContext ctx,
+            [Description("true - включить / false - отключить")]
+            bool isEnabled,
+            [Description("channel for notification")]
+            DiscordChannel targetChannel = null)
+        {
+
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithColor(Constants.ErrorColor)
+                .WithTitle(ctx.Member.DisplayName);
+
+            if (isEnabled && targetChannel == null)
+            {
+                discordEmbed.WithDescription("targetChannel is required if isEnabled equals true");
+            }
+            else
+            {
+
+                bool operationSuccess = isEnabled
+                    ? BotReadyNotificationsContainer.Current.AddGuild(ctx.Guild.Id, targetChannel.Id)
+                    : BotReadyNotificationsContainer.Current.RemoveGuild(ctx.Guild.Id);
+
+                if (operationSuccess)
+                {
+                    discordEmbed.WithColor(Constants.SuccessColor)
+                        .WithDescription(isEnabled ? "Включено!" : "Отключено!");
+                }
+                else
+                {
+                    discordEmbed.WithDescription("operation with error");
+                }
+
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
         #region NOT COMMAND
         private static async Task Forward(
             CommandContext ctx,

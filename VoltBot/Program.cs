@@ -35,10 +35,8 @@ namespace VoltBot
 
             try
             {
-                using (Bot volt = Bot.Current)
-                {
-                    volt.RunAsync().GetAwaiter().GetResult();
-                }
+                using Bot volt = Bot.Current;
+                volt.RunAsync().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
