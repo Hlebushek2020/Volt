@@ -9,7 +9,7 @@ namespace VoltBot.Modules
 {
     internal class DeletingMessagesByEmojiModule : HandlerModule<MessageReactionAddEventArgs>
     {
-        private readonly EventId _eventId = new EventId(0, "Deleting Messages By Emoji");
+        private static readonly EventId _eventId = new EventId(0, "Deleting Messages By Emoji");
 
         public override async Task Handler(DiscordClient sender, MessageReactionAddEventArgs e)
         {

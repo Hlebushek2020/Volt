@@ -17,14 +17,15 @@ namespace VoltBot.Modules
 {
     internal class ForwardingPostFromVkByUrlModule : HandlerModule<MessageCreateEventArgs>
     {
-        private readonly EventId _eventId = new EventId(0, "Forwarding Post From Vk By Url");
-        private readonly VkApi _vkApi = new VkApi();
+        private static readonly EventId _eventId = new EventId(0, "Forwarding Post From Vk By Url");
 
-        private readonly Regex _groupExportLink =
+        private static readonly Regex _groupExportLink =
             new Regex(@"(?<!\\)https:\/\/vk.com\/wall(-?\d+)_(\d+)", RegexOptions.Compiled);
 
-        private readonly Regex _groupNormalLink =
+        private static readonly Regex _groupNormalLink =
             new Regex(@"(?<!\\)https:\/\/vk.com\/.*w=wall(-?\d+)_(\d+)", RegexOptions.Compiled);
+
+        private readonly VkApi _vkApi = new VkApi();
 
         public ForwardingPostFromVkByUrlModule()
         {
@@ -43,7 +44,7 @@ namespace VoltBot.Modules
         {
             if (_vkApi.IsAuthorized)
             {
-                DiscordEmoji deleteEmoji = DiscordEmoji.FromName(sender, ":negative_squared_cross_mark:", false);
+                DiscordEmoji deleteEmoji = DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji, false);
 
                 string id = TryGetGroupPostIdFromExportUrl(e.Message.Content);
                 if (string.IsNullOrWhiteSpace(id))
@@ -356,13 +357,13 @@ namespace VoltBot.Modules
 
         }
 
-        public string TryGetGroupPostIdFromExportUrl(string msg)
+        public static string TryGetGroupPostIdFromExportUrl(string msg)
         {
             Match match = _groupExportLink.Match(msg);
             return match.Groups.Count != 3 ? null : $"{match.Groups[1].Value}_{match.Groups[2].Value}";
         }
 
-        public string TryGetGroupPostIdFromRegularUrl(string msg)
+        public static string TryGetGroupPostIdFromRegularUrl(string msg)
         {
             Match match = _groupNormalLink.Match(msg);
             return match.Groups.Count != 3 ? null : $"{match.Groups[1].Value}_{match.Groups[2].Value}";

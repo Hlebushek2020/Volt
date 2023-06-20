@@ -9,7 +9,7 @@ namespace VoltBot.Modules
 {
     internal class BotPingModule : HandlerModule<MessageCreateEventArgs>
     {
-        private readonly EventId _eventId = new EventId(0, "Ping");
+        private static readonly EventId _eventId = new EventId(0, "Ping");
 
         public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {

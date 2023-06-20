@@ -12,13 +12,13 @@ namespace VoltBot.Modules
 {
     internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
     {
-        private readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
+        private static readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
 
-        private readonly Regex _messagePattern =
+        private static readonly Regex _messagePattern =
             new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
                 RegexOptions.Compiled);
 
-        private Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
+        private static Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
         {
             Match match = _messagePattern.Match(messageText);
 

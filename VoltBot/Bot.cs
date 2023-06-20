@@ -161,6 +161,9 @@ namespace VoltBot
             _defaultLogger.LogInformation(eventId, "Disconnect discord client");
             await _discordClient.DisconnectAsync();
 
+            _defaultLogger.LogInformation(eventId, "Reconnect after 2 seconds");
+            await Task.Delay(2000);
+
             _defaultLogger.LogInformation(eventId, "Discord client connect");
             await _discordClient.ConnectAsync();
         }
