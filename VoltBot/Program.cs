@@ -33,16 +33,18 @@ namespace VoltBot
                 return 0;
             }
 
-            try
+            using Bot volt = Bot.Current;
+            while (true)
             {
-                using Bot volt = Bot.Current;
-                volt.RunAsync().GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-                defaultLogger.LogCritical(new EventId(0, "App"), ex, "");
-                return 1;
+                try
+                {
+                    volt.RunAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+                    defaultLogger.LogCritical(new EventId(0, "App"), ex, "");
+                }
             }
 
             return 0;
