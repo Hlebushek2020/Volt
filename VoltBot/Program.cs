@@ -33,12 +33,14 @@ namespace VoltBot
                 return 0;
             }
 
-            using Bot volt = Bot.Current;
-            while (true)
+            bool isShutdown = false;
+            while (!isShutdown)
             {
                 try
                 {
+                    using Bot volt = Bot.Current;
                     volt.RunAsync().GetAwaiter().GetResult();
+                    isShutdown = true;
                 }
                 catch (Exception ex)
                 {

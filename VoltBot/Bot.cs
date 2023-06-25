@@ -21,9 +21,9 @@ namespace VoltBot
         public DateTime StartDateTime { get; private set; }
 
         #region Instance
-        private static Bot _bot;
+        private static Bot _currentInstance;
 
-        public static Bot Current => _bot ??= new Bot();
+        public static Bot Current => _currentInstance ??= new Bot();
         #endregion
 
         private volatile bool _isRunning = false;
@@ -50,13 +50,13 @@ namespace VoltBot
             });
 
             _discordClient.Ready += DiscordClient_Ready;
-            _discordClient.SocketErrored += DiscordClient_SocketErrored;
+            //_discordClient.SocketErrored += DiscordClient_SocketErrored;
 
             _discordClient.MessageCreated += new ForwardingMessageByUrlModule().Handler;
             _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
             _discordClient.MessageCreated += new BotPingModule().Handler;
             _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
-            _discordClient.Ready += new BotReadyNotificationsModule().Handler;
+            //_discordClient.Ready += new BotNotificationsModule().Handler;
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -72,16 +72,18 @@ namespace VoltBot
             commands.RegisterCommands<AdministratorCommandModule>();
         }
 
+        ~Bot() { Dispose(false); }
+
         private static async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
             await sender.UpdateStatusAsync(new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help",
                 ActivityType.Watching));
 
-        private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
+        /*private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
         {
             _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, "");
             Shutdown();
             return Task.CompletedTask;
-        }
+        }*/
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
@@ -189,6 +191,8 @@ namespace VoltBot
 
                 _discordClient?.Dispose();
             }
+
+            _currentInstance = null;
 
             _isDisposed = true;
         }

@@ -17,6 +17,7 @@ namespace VoltBot.Commands
     [RequireUserPermissions(Permissions.Administrator)]
     internal class AdministratorCommandModule : VoltCommandModule
     {
+        #region Forward Commands
         [Command("resend")]
         [Aliases("r")]
         [Description("Переслать сообщение в другой канал")]
@@ -43,7 +44,9 @@ namespace VoltBot.Commands
         {
             await Forward(ctx, targetChannel, reason, true, true);
         }
+        #endregion
 
+        #region Command: bug-report
         [Command("bug-report")]
         [Description(
             "Сообщить об ошибке. Убедительная просьба прикладывать как можно больше информации об ошибке (действия которые к ней привели, скриншоты и т.д.) к сообщению с данной командой.")]
@@ -141,46 +144,13 @@ namespace VoltBot.Commands
 
             await ctx.RespondAsync(discordEmbed);
         }
+        #endregion
 
-        [Command("ready-notification")]
-        [Description("Bot ready notification")]
-        public async Task ReadyNotification(
-            CommandContext ctx,
-            [Description("true - включить / false - отключить")]
-            bool isEnabled,
-            [Description("channel for notification")]
-            DiscordChannel targetChannel = null)
-        {
-
-            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-                .WithColor(Constants.ErrorColor)
-                .WithTitle(ctx.Member.DisplayName);
-
-            if (isEnabled && targetChannel == null)
-            {
-                discordEmbed.WithDescription("targetChannel is required if isEnabled equals true");
-            }
-            else
-            {
-
-                bool operationSuccess = isEnabled
-                    ? BotReadyNotificationsContainer.Current.AddGuild(ctx.Guild.Id, targetChannel.Id)
-                    : BotReadyNotificationsContainer.Current.RemoveGuild(ctx.Guild.Id);
-
-                if (operationSuccess)
-                {
-                    discordEmbed.WithColor(Constants.SuccessColor)
-                        .WithDescription(isEnabled ? "Включено!" : "Отключено!");
-                }
-                else
-                {
-                    discordEmbed.WithDescription("operation with error");
-                }
-
-            }
-
-            await ctx.RespondAsync(discordEmbed);
-        }
+        #region Notifications command
+        public async Task SetNotificationChannel(CommandContext ctx, DiscordChannel target) { }
+        public async Task ReadyNotification(CommandContext ctx, bool isEnabled) { }
+        public async Task ShutdownNotification(CommandContext ctx, bool isEnabled) { }
+        #endregion
 
         #region NOT COMMAND
         private static async Task Forward(
