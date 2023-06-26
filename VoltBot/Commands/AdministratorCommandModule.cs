@@ -216,6 +216,7 @@ namespace VoltBot.Commands
                         guildNotification.ChannelId, guildNotification.IsReady, isEnabled);
                     BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
                 }
+
                 discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
                     .WithColor(Constants.SuccessColor);
             }
