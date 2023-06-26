@@ -37,7 +37,10 @@ public class BotNotificationsController
 
     public List<GuildNotification> GetAll() => _guildsForNotification.Values.ToList();
 
-    public bool Add(GuildNotification guildNotification)
+    public bool Get(ulong guildId, out GuildNotification guildNotification) =>
+        _guildsForNotification.TryGetValue(guildId, out guildNotification);
+
+    public bool AddOrUpdate(GuildNotification guildNotification)
     {
         GuildNotification newValue = _guildsForNotification.AddOrUpdate(guildNotification.GuildId, guildNotification,
             (k, ov) => guildNotification);

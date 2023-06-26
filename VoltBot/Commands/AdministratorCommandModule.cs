@@ -8,6 +8,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
+using VoltBot.Modules.Notifications;
 
 namespace VoltBot.Commands
 {
@@ -147,9 +148,43 @@ namespace VoltBot.Commands
         #endregion
 
         #region Notifications command
-        public async Task SetNotificationChannel(CommandContext ctx, DiscordChannel target) { }
-        public async Task ReadyNotification(CommandContext ctx, bool isEnabled) { }
-        public async Task ShutdownNotification(CommandContext ctx, bool isEnabled) { }
+        [Command("notification-channel")]
+        [Aliases("notif-channel")]
+        [Description("Задать канал для отправки системных уведомлений")]
+        public async Task SetNotificationChannel(
+            CommandContext ctx,
+            [Description("Канал")]
+            DiscordChannel target)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Что-то пошло не так!")
+                .WithColor(Constants.ErrorColor);
+
+            if (BotNotificationsController.Current.AddOrUpdate(new GuildNotification(ctx.Guild.Id, target.Id)))
+            {
+                discordEmbed.WithDescription("Канал установлен!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("ready-notification")]
+        [Aliases("ready-notif")]
+        [Description("Включить / Отключить уведомление о включении бота")]
+        public async Task ReadyNotification(
+            CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled) { }
+
+        [Command("shutdown-notification")]
+        [Aliases("sd-notif")]
+        [Description("Включить / Отключить уведомление о выключении бота")]
+        public async Task ShutdownNotification(
+            CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled) { }
         #endregion
 
         #region NOT COMMAND
