@@ -166,8 +166,8 @@ namespace VoltBot.Commands
             await ctx.RespondAsync(discordEmbed);
         }
 
-        [Command("ready-notification")]
-        [Aliases("ready-notif")]
+        [Command("on-notification")]
+        [Aliases("on-notif")]
         [Description("Включить / Отключить уведомление о включении бота")]
         public async Task ReadyNotification(
             CommandContext ctx,
@@ -195,8 +195,8 @@ namespace VoltBot.Commands
             await ctx.RespondAsync(discordEmbed);
         }
 
-        [Command("shutdown-notification")]
-        [Aliases("sd-notif")]
+        [Command("off-notification")]
+        [Aliases("off-notif")]
         [Description("Включить / Отключить уведомление о выключении бота")]
         public async Task ShutdownNotification(
             CommandContext ctx,
