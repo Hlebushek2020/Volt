@@ -158,14 +158,10 @@ namespace VoltBot.Commands
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
-                .WithDescription("Что-то пошло не так!")
-                .WithColor(Constants.ErrorColor);
+                .WithDescription("Канал установлен!")
+                .WithColor(Constants.SuccessColor);
 
-            if (BotNotificationsController.Current.AddOrUpdate(new GuildNotification(ctx.Guild.Id, target.Id)))
-            {
-                discordEmbed.WithDescription("Канал установлен!")
-                    .WithColor(Constants.SuccessColor);
-            }
+            BotNotificationsController.Current.AddOrUpdate(new GuildNotification(ctx.Guild.Id, target.Id));
 
             await ctx.RespondAsync(discordEmbed);
         }
@@ -176,7 +172,28 @@ namespace VoltBot.Commands
         public async Task ReadyNotification(
             CommandContext ctx,
             [Description("true - включить / false - выключить")]
-            bool isEnabled) { }
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал для отправки системных уведомлений не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification guildNotification))
+            {
+                if (guildNotification.IsReady != isEnabled)
+                {
+                    GuildNotification newGuildNotification = new GuildNotification(guildNotification.GuildId,
+                        guildNotification.ChannelId, isEnabled, guildNotification.IsShutdown);
+                    BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
+                }
+
+                discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
 
         [Command("shutdown-notification")]
         [Aliases("sd-notif")]
@@ -184,7 +201,28 @@ namespace VoltBot.Commands
         public async Task ShutdownNotification(
             CommandContext ctx,
             [Description("true - включить / false - выключить")]
-            bool isEnabled) { }
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал для отправки системных уведомлений не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification guildNotification))
+            {
+                if (guildNotification.IsReady != isEnabled)
+                {
+                    GuildNotification newGuildNotification = new GuildNotification(guildNotification.GuildId,
+                        guildNotification.ChannelId, isEnabled, guildNotification.IsShutdown);
+                    BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
+                }
+
+                discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
         #endregion
 
         #region NOT COMMAND

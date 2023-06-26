@@ -40,12 +40,11 @@ public class BotNotificationsController
     public bool Get(ulong guildId, out GuildNotification guildNotification) =>
         _guildsForNotification.TryGetValue(guildId, out guildNotification);
 
-    public bool AddOrUpdate(GuildNotification guildNotification)
+    public void AddOrUpdate(GuildNotification guildNotification)
     {
         GuildNotification newValue = _guildsForNotification.AddOrUpdate(guildNotification.GuildId, guildNotification,
             (k, ov) => guildNotification);
         Save();
-        return newValue.Equals(guildNotification);
     }
 
     public bool Remove(GuildNotification guildNotification) => Remove(guildNotification.GuildId);
