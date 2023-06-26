@@ -19,7 +19,7 @@ namespace VoltBot.Commands
         [Description("Выключить бота")]
         public async Task Shutdown(
             CommandContext ctx,
-            [Description("Причина выключения бота")]
+            [Description("Причина выключения бота"), RemainingText]
             string reason)
         {
             await ctx.RespondAsync("Ok");
