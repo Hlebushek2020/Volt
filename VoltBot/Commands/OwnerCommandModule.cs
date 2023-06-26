@@ -17,10 +17,13 @@ namespace VoltBot.Commands
         [Command("shutdown")]
         [Aliases("sd")]
         [Description("Выключить бота")]
-        public async Task Shutdown(CommandContext ctx)
+        public async Task Shutdown(
+            CommandContext ctx,
+            [Description("Причина выключения бота")]
+            string reason)
         {
             await ctx.RespondAsync("Ok");
-            Bot.Current.Shutdown();
+            Bot.Current.Shutdown(reason);
         }
 
         [Command("status")]

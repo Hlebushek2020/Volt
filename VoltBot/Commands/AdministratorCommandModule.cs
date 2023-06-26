@@ -210,13 +210,12 @@ namespace VoltBot.Commands
 
             if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification guildNotification))
             {
-                if (guildNotification.IsReady != isEnabled)
+                if (guildNotification.IsShutdown != isEnabled)
                 {
                     GuildNotification newGuildNotification = new GuildNotification(guildNotification.GuildId,
-                        guildNotification.ChannelId, isEnabled, guildNotification.IsShutdown);
+                        guildNotification.ChannelId, guildNotification.IsReady, isEnabled);
                     BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
                 }
-
                 discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
                     .WithColor(Constants.SuccessColor);
             }

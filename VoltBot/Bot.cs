@@ -12,6 +12,7 @@ using VoltBot.Commands.Formatter;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Modules;
+using VoltBot.Modules.Notifications;
 using VoltBot.Settings;
 
 namespace VoltBot
@@ -30,6 +31,7 @@ namespace VoltBot
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger _defaultLogger;
+        private readonly BotNotificationsModule _botNotificationsModule;
 
         public Bot()
         {
@@ -56,7 +58,8 @@ namespace VoltBot
             _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
             _discordClient.MessageCreated += new BotPingModule().Handler;
             _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
-            //_discordClient.Ready += new BotNotificationsModule().Handler;
+
+            _botNotificationsModule = new BotNotificationsModule(_discordClient);
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
             {
@@ -136,19 +139,27 @@ namespace VoltBot
             await _discordClient.ConnectAsync();
             StartDateTime = DateTime.Now;
             _isRunning = true;
+
+            await _botNotificationsModule.SendReadyNotifications();
+
             while (_isRunning)
             {
                 await Task.Delay(200);
             }
         }
 
-        public void Shutdown()
+        public void Shutdown(string reason = null)
         {
             EventId eventId = new EventId(0, "Shutdown");
             _defaultLogger.LogInformation(eventId, "Shutdown");
 
             if (_discordClient != null)
             {
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    _botNotificationsModule.SendShutdownNotifications(reason).Wait();
+                }
+
                 _defaultLogger.LogInformation(eventId, "Disconnect discord client");
                 _discordClient.DisconnectAsync().Wait();
             }

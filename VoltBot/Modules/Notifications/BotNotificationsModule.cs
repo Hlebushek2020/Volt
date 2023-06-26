@@ -18,7 +18,7 @@ internal class BotNotificationsModule
     public BotNotificationsModule(DiscordClient discordClient) { _discordClient = discordClient; }
 
     public Task SendReadyNotifications() =>
-        SendNotifications($"Отключение бота по следующей причине", notification => notification.IsReady);
+        SendNotifications("Бот снова в сети!", notification => notification.IsReady);
 
     public Task SendShutdownNotifications(string reason) =>
         SendNotifications($"Отключение бота по следующей причине: {reason}", notification => notification.IsShutdown);
@@ -33,7 +33,7 @@ internal class BotNotificationsModule
 
         foreach (GuildNotification guildNotification in BotNotificationsController.Current.GetAll())
         {
-            if (typeFunc(guildNotification) && _discordClient.Guilds.TryGetValue(guildNotification.GuildId, out _))
+            if (typeFunc(guildNotification))
             {
                 try
                 {
