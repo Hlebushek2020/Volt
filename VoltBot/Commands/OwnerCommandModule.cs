@@ -34,14 +34,17 @@ namespace VoltBot.Commands
                 .WithColor(Constants.StatusColor)
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("DSharpPlus", $"v{ctx.Client.VersionString}")
-                .AddField("Сборка",
+                .AddField(
+                    "Сборка",
                     $"v{Program.Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
-                .AddField("Дата запуска",
+                .AddField(
+                    "Дата запуска",
                     $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
 
             TimeSpan timeSpan = DateTime.Now - Bot.Current.StartDateTime;
 
-            discordEmbed.AddField("Время работы",
+            discordEmbed.AddField(
+                "Время работы",
                 $"{timeSpan.Days}d, {timeSpan.Hours}h, {timeSpan.Minutes}m, {timeSpan.Seconds}s");
 
             await ctx.RespondAsync(discordEmbed);

@@ -61,29 +61,38 @@ namespace VoltBot.Commands.Formatter
 
         public override BaseHelpFormatter WithSubcommands(IEnumerable<Command> commands)
         {
-            StringBuilder commandSb = new StringBuilder();
+            Dictionary<string, string> aviableCommands = new Dictionary<string, string>();
             foreach (Command command in commands)
             {
                 if (!command.RunChecksAsync(Context, true).Result.Any())
                 {
-                    if (commandSb.Length > 0)
-                    {
-                        commandSb.Append("; ");
-                    }
-                    commandSb.Append('`');
-                    commandSb.Append(command.Name);
+                    string key = command.Name;
                     if (command.Aliases.Count > 0)
                     {
-                        commandSb.Append(" (");
-                        commandSb.AppendJoin(", ", command.Aliases);
-                        commandSb.Append(')');
+                        key += $" ({string.Join(", ", command.Aliases)})";
                     }
-                    commandSb.Append('`');
+                    aviableCommands.Add(key, command.Description);
                 }
             }
+
+            // aviableCommands["help"] = "Отображает информацию по команде";
+
             _embed.WithTitle("help")
-                .WithDescription(Settings.Settings.Current.BotDescription)
-                .AddField("Список команд:", commandSb.Length > 0 ? commandSb.ToString() : "Нет доступных команд");
+                .WithDescription(Settings.Settings.Current.BotDescription);
+
+            if (aviableCommands.Count == 0)
+            {
+                _embed.AddField("Список команд", "Нет доступных команд");
+            }
+            else
+            {
+                _embed.AddField("Список команд", new string('=', 13));
+                foreach (string commandKey in aviableCommands.Keys)
+                {
+                    _embed.AddField(commandKey, aviableCommands[commandKey]);
+                }
+            }
+
             return this;
         }
     }

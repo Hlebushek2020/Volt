@@ -81,7 +81,8 @@ namespace VoltBot.Commands
                         .WithTitle("Bug-Report")
                         .AddField("Author", ctx.User.Username + "#" + ctx.User.Discriminator)
                         .AddField("Guild", ctx.Guild.Name)
-                        .AddField("Date",
+                        .AddField(
+                            "Date",
                             discordMessage.CreationTimestamp.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss"));
 
                     DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
@@ -103,7 +104,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, "");
+                            _defaultLogger.LogWarning(eventId, ex, string.Empty);
                         }
                     }
 
@@ -161,7 +162,17 @@ namespace VoltBot.Commands
                 .WithDescription("Канал установлен!")
                 .WithColor(Constants.SuccessColor);
 
-            BotNotificationsController.Current.AddOrUpdate(new GuildNotification(ctx.Guild.Id, target.Id));
+            GuildNotification guildNotification = new GuildNotification(ctx.Guild.Id, target.Id);
+            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification existGuildNotification))
+            {
+                guildNotification = new GuildNotification(
+                    ctx.Guild.Id,
+                    target.Id,
+                    existGuildNotification.IsReady,
+                    existGuildNotification.IsShutdown);
+            }
+
+            BotNotificationsController.Current.AddOrUpdate(guildNotification);
 
             await ctx.RespondAsync(discordEmbed);
         }
@@ -183,8 +194,11 @@ namespace VoltBot.Commands
             {
                 if (guildNotification.IsReady != isEnabled)
                 {
-                    GuildNotification newGuildNotification = new GuildNotification(guildNotification.GuildId,
-                        guildNotification.ChannelId, isEnabled, guildNotification.IsShutdown);
+                    GuildNotification newGuildNotification = new GuildNotification(
+                        guildNotification.GuildId,
+                        guildNotification.ChannelId,
+                        isEnabled,
+                        guildNotification.IsShutdown);
                     BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
                 }
 
@@ -212,8 +226,11 @@ namespace VoltBot.Commands
             {
                 if (guildNotification.IsShutdown != isEnabled)
                 {
-                    GuildNotification newGuildNotification = new GuildNotification(guildNotification.GuildId,
-                        guildNotification.ChannelId, guildNotification.IsReady, isEnabled);
+                    GuildNotification newGuildNotification = new GuildNotification(
+                        guildNotification.GuildId,
+                        guildNotification.ChannelId,
+                        guildNotification.IsReady,
+                        isEnabled);
                     BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
                 }
 
@@ -310,7 +327,8 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        _defaultLogger.LogDebug(eventId,
+                        _defaultLogger.LogDebug(
+                            eventId,
                             $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {
                                 discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
 
@@ -323,7 +341,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, "");
+                            _defaultLogger.LogWarning(eventId, ex, string.Empty);
                         }
                     }
                 }

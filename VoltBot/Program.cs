@@ -45,7 +45,7 @@ namespace VoltBot
                 catch (Exception ex)
                 {
                     ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-                    defaultLogger.LogCritical(new EventId(0, "App"), ex, "");
+                    defaultLogger.LogCritical(new EventId(0, "App"), ex, string.Empty);
                 }
             }
 

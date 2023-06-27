@@ -43,13 +43,14 @@ namespace VoltBot
 
             _defaultLogger.LogInformation(new EventId(0, "Init"), "Initializing discord client");
 
-            _discordClient = new DiscordClient(new DiscordConfiguration
-            {
-                Token = settings.BotToken,
-                TokenType = TokenType.Bot,
-                Intents = DiscordIntents.All,
-                LoggerFactory = loggerFactory
-            });
+            _discordClient = new DiscordClient(
+                new DiscordConfiguration
+                {
+                    Token = settings.BotToken,
+                    TokenType = TokenType.Bot,
+                    Intents = DiscordIntents.All,
+                    LoggerFactory = loggerFactory
+                });
 
             _discordClient.Ready += DiscordClient_Ready;
             //_discordClient.SocketErrored += DiscordClient_SocketErrored;
@@ -61,10 +62,11 @@ namespace VoltBot
 
             _botNotificationsModule = new BotNotificationsModule(_discordClient);
 
-            CommandsNextExtension commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
-            {
-                StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix }
-            });
+            CommandsNextExtension commands = _discordClient.UseCommandsNext(
+                new CommandsNextConfiguration
+                {
+                    StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix }
+                });
 
             commands.CommandErrored += Commands_CommandErrored;
             commands.CommandExecuted += Commands_CommandExecuted;
@@ -78,19 +80,20 @@ namespace VoltBot
         ~Bot() { Dispose(false); }
 
         private static async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
-            await sender.UpdateStatusAsync(new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help",
-                ActivityType.Watching));
+            await sender.UpdateStatusAsync(
+                new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help", ActivityType.Watching));
 
         /*private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
         {
-            _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, "");
+            _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, string.Empty);
             Shutdown();
             return Task.CompletedTask;
         }*/
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
-            _defaultLogger.LogInformation(new EventId(0, $"Command: {e.Command.Name}"),
+            _defaultLogger.LogInformation(
+                new EventId(0, $"Command: {e.Command.Name}"),
                 "Command completed successfully");
             return Task.CompletedTask;
         }
@@ -110,23 +113,32 @@ namespace VoltBot
             {
                 embed.WithDescription(
                     $"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
-                _defaultLogger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, "");
+                _defaultLogger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, string.Empty);
             }
             else if (exception is CommandNotFoundException commandNotFoundEx)
             {
                 embed.WithDescription($"Неизвестная команда `{commandNotFoundEx.CommandName}`");
-                _defaultLogger.LogWarning(new EventId(0, $"Command: {commandNotFoundEx.CommandName}"), exception, "");
+                _defaultLogger.LogWarning(
+                    new EventId(0, $"Command: {commandNotFoundEx.CommandName}"),
+                    exception,
+                    string.Empty);
             }
             else if (exception is ChecksFailedException checksFailedEx)
             {
                 embed.WithDescription($"У вас нет доступа к команде `{checksFailedEx.Command.Name}`");
-                _defaultLogger.LogWarning(new EventId(0, $"Command: {checksFailedEx.Command.Name}"), exception, "");
+                _defaultLogger.LogWarning(
+                    new EventId(0, $"Command: {checksFailedEx.Command.Name}"),
+                    exception,
+                    string.Empty);
             }
             else
             {
                 embed.WithDescription(
                     "При выполнении команды произошла неизвестная ошибка, обратитесь к администраторам сервера (гильдии)");
-                _defaultLogger.LogError(new EventId(0, $"Command: {e.Command?.Name ?? "Unknown"}"), exception, "");
+                _defaultLogger.LogError(
+                    new EventId(0, $"Command: {e.Command?.Name ?? "Unknown"}"),
+                    exception,
+                    string.Empty);
             }
 
             await context.RespondAsync(embed);

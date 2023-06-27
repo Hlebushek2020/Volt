@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace VoltBot.Settings
 {
@@ -28,7 +28,8 @@ namespace VoltBot.Settings
             {
                 if (_settings == null)
                 {
-                    string settingsFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    string settingsFile = Path.Combine(
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                         "settings.json");
                     _settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
                 }
@@ -39,7 +40,8 @@ namespace VoltBot.Settings
 
         public static bool Availability()
         {
-            string settingsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+            string settingsPath = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                 "settings.json");
 
             if (File.Exists(settingsPath))

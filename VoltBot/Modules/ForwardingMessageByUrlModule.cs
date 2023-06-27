@@ -15,7 +15,8 @@ namespace VoltBot.Modules
         private static readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
 
         private static readonly Regex _messagePattern =
-            new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
+            new Regex(
+                @"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
                 RegexOptions.Compiled);
 
         private static Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
@@ -74,7 +75,8 @@ namespace VoltBot.Modules
                     foreach (DiscordAttachment discordAttachment in resendMessage.Attachments)
                     {
                         if (discordAttachment.MediaType != null &&
-                            discordAttachment.MediaType.StartsWith("image",
+                            discordAttachment.MediaType.StartsWith(
+                                "image",
                                 StringComparison.InvariantCultureIgnoreCase))
                         {
                             DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
@@ -93,7 +95,7 @@ namespace VoltBot.Modules
                             }
                             catch (Exception ex)
                             {
-                                _defaultLogger.LogWarning(_eventId, ex, "");
+                                _defaultLogger.LogWarning(_eventId, ex, string.Empty);
                             }
                         }
                     }
@@ -101,8 +103,11 @@ namespace VoltBot.Modules
 
                 DiscordMessage newMessage = await e.Message.RespondAsync(newMessageBuilder);
 
-                await newMessage.CreateReactionAsync(DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji,
-                    false));
+                await newMessage.CreateReactionAsync(
+                    DiscordEmoji.FromName(
+                        sender,
+                        Constants.DeleteMessageEmoji,
+                        false));
             }
         }
     }

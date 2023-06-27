@@ -17,9 +17,10 @@ namespace VoltBot.Modules
 
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
-                _defaultLogger.LogInformation(_eventId,
+                _defaultLogger.LogInformation(
+                    _eventId,
                     $"{e.User.Username}#{e.User.Discriminator}{
-                        (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                        (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : string.Empty)}, {e.Message.Id}");
                 if (e.Guild != null)
                 {
                     DiscordMessage currentMessage = await e.Channel.GetMessageAsync(e.Message.Id);

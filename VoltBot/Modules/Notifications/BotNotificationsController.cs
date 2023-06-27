@@ -21,7 +21,8 @@ public class BotNotificationsController
     public BotNotificationsController()
     {
         string settingsPath =
-            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+            Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
                 "guildsForNotification.bin");
         using FileStream fileStream = new FileStream(settingsPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         using BinaryReader binaryReader = new BinaryReader(fileStream);
@@ -42,7 +43,9 @@ public class BotNotificationsController
 
     public void AddOrUpdate(GuildNotification guildNotification)
     {
-        GuildNotification newValue = _guildsForNotification.AddOrUpdate(guildNotification.GuildId, guildNotification,
+        GuildNotification newValue = _guildsForNotification.AddOrUpdate(
+            guildNotification.GuildId,
+            guildNotification,
             (k, ov) => guildNotification);
         Save();
     }
@@ -59,7 +62,8 @@ public class BotNotificationsController
     private void Save()
     {
         string settingsPath =
-            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+            Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
                 "guildsForNotification.bin");
         using FileStream fileStream = new FileStream(settingsPath, FileMode.Create, FileAccess.Write);
         using BinaryWriter binaryWriter = new BinaryWriter(fileStream);

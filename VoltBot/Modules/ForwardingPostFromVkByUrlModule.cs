@@ -52,9 +52,10 @@ namespace VoltBot.Modules
 
                 if (!string.IsNullOrWhiteSpace(id))
                 {
-                    _defaultLogger.LogInformation(_eventId,
+                    _defaultLogger.LogInformation(
+                        _eventId,
                         $"{e.Message.Author.Username}#{e.Message.Author.Discriminator}{
-                            (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                            (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : string.Empty)}, {e.Message.Id}");
                     await ParseGroupPost(id, deleteEmoji, e.Message, e.Channel);
                 }
             }
@@ -91,7 +92,8 @@ namespace VoltBot.Modules
             Post sourcePost = wallPost;
             if (wallPost == null)
             {
-                _defaultLogger.LogDebug($"Failed to get VK post from WallPosts collection (original post {postId})",
+                _defaultLogger.LogDebug(
+                    $"Failed to get VK post from WallPosts collection (original post {postId})",
                     _eventId);
                 return;
             }
@@ -106,7 +108,9 @@ namespace VoltBot.Modules
                 IReadOnlyCollection<Group> historyGroups = await _vkApi.Groups.GetByIdAsync(
                     wallPost.CopyHistory.Select(x => Math.Abs((long) x.OwnerId).ToString())
                         .Append(sourcePost.FromId.ToString().Replace("-", string.Empty))
-                        .ToList(), null, null);
+                        .ToList(),
+                    null,
+                    null);
 
                 repostInfo.AppendLine($"{(string.IsNullOrEmpty(wallPost.Text) ? string.Empty : wallPost.Text)}");
 
@@ -136,7 +140,8 @@ namespace VoltBot.Modules
                 if (group == null)
                 {
                     _defaultLogger.LogInformation(
-                        $"Failed to get information about the author of the VK post ({wallPost.FromId})", _eventId);
+                        $"Failed to get information about the author of the VK post ({wallPost.FromId})",
+                        _eventId);
                     return;
                 }
 
@@ -150,7 +155,8 @@ namespace VoltBot.Modules
                 if (user == null)
                 {
                     _defaultLogger.LogInformation(
-                        $"Failed to get information about the author of the VK post ({wallPost.FromId})", _eventId);
+                        $"Failed to get information about the author of the VK post ({wallPost.FromId})",
+                        _eventId);
                     return;
                 }
 
@@ -169,8 +175,9 @@ namespace VoltBot.Modules
                 switch (attachment.Instance)
                 {
                     case Photo photo:
-                        PhotoSize size = photo.Sizes.First(x =>
-                            x.Width == photo.Sizes.Max(y => y.Width) && x.Height == photo.Sizes.Max(y => y.Height));
+                        PhotoSize size = photo.Sizes.First(
+                            x =>
+                                x.Width == photo.Sizes.Max(y => y.Width) && x.Height == photo.Sizes.Max(y => y.Height));
                         imageUrls.Add(size.Url.AbsoluteUri);
                         break;
                     case Video video:
@@ -179,7 +186,8 @@ namespace VoltBot.Modules
                     case Poll poll:
                         Tuple<string, string> strPoll = new Tuple<string, string>(
                             poll.Question,
-                            string.Join(' ',
+                            string.Join(
+                                ' ',
                                 poll.Answers
                                     .Select(x => $"**{x.Text}** - {x.Votes} ({x.Rate:#.##}%)\n")));
                         fields.Add(strPoll);
@@ -207,9 +215,10 @@ namespace VoltBot.Modules
                 // 1-st embed
                 if (repostInfo.Length != 0)
                 {
-                    finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(repostInfo.ToString())
-                        .WithColor(Constants.SuccessColor));
+                    finalEmbeds.Add(
+                        new DiscordEmbedBuilder()
+                            .WithDescription(repostInfo.ToString())
+                            .WithColor(Constants.SuccessColor));
                 }
 
                 // 2-nd embed can be splitted in more embeds. Each one contains post text, splitted in chunks
@@ -244,15 +253,18 @@ namespace VoltBot.Modules
                     messageChunks.Add(postMessage);
                 }
 
-                finalEmbeds.AddRange(messageChunks.Select(chunk => new DiscordEmbedBuilder().WithDescription(chunk)
-                    .WithColor(Constants.SuccessColor)));
+                finalEmbeds.AddRange(
+                    messageChunks.Select(
+                        chunk => new DiscordEmbedBuilder().WithDescription(chunk)
+                            .WithColor(Constants.SuccessColor)));
 
                 // 3rd embed
                 if (videoUrls.Length != 0)
                 {
-                    finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithDescription(videoUrls.ToString())
-                        .WithColor(Constants.SuccessColor));
+                    finalEmbeds.Add(
+                        new DiscordEmbedBuilder()
+                            .WithDescription(videoUrls.ToString())
+                            .WithColor(Constants.SuccessColor));
                 }
 
                 firstEmbedWithImageIndex = finalEmbeds.Count - 1;
@@ -273,9 +285,10 @@ namespace VoltBot.Modules
                     concatedPostMessage.Append(videoUrls);
                 }
 
-                finalEmbeds.Add(new DiscordEmbedBuilder()
-                    .WithDescription(concatedPostMessage.ToString())
-                    .WithColor(Constants.SuccessColor));
+                finalEmbeds.Add(
+                    new DiscordEmbedBuilder()
+                        .WithDescription(concatedPostMessage.ToString())
+                        .WithColor(Constants.SuccessColor));
             }
 
             // In case, when post length is less than 4096 symbols topBuilder and bottomBuilder will be the same 
@@ -290,10 +303,11 @@ namespace VoltBot.Modules
 
                 // If embed contains more then 1 image, the top embed should contain image url too
                 for (int i = 1; i < imageUrls.Count; i++)
-                    finalEmbeds.Add(new DiscordEmbedBuilder()
-                        .WithImageUrl(imageUrls[i])
-                        .WithUrl($"http://vk.com/wall{postId}")
-                        .WithColor(Constants.SuccessColor));
+                    finalEmbeds.Add(
+                        new DiscordEmbedBuilder()
+                            .WithImageUrl(imageUrls[i])
+                            .WithUrl($"http://vk.com/wall{postId}")
+                            .WithColor(Constants.SuccessColor));
             }
 
             // bottomBuilder is last one, if:
@@ -323,22 +337,25 @@ namespace VoltBot.Modules
 
                 if (repostInfo.Length != 0)
                 {
-                    messages.Add(new DiscordMessageBuilder()
-                        .AddEmbeds(finalEmbeds.Take(2).Select(x => x.Build()).ToList()));
+                    messages.Add(
+                        new DiscordMessageBuilder()
+                            .AddEmbeds(finalEmbeds.Take(2).Select(x => x.Build()).ToList()));
 
                     startIndex = 2;
                 }
 
                 for (int i = startIndex; i < firstEmbedWithImageIndex; i++)
                 {
-                    messages.Add(new DiscordMessageBuilder()
-                        .AddEmbed(finalEmbeds[i].Build()));
+                    messages.Add(
+                        new DiscordMessageBuilder()
+                            .AddEmbed(finalEmbeds[i].Build()));
                 }
             }
 
             for (int i = firstEmbedWithImageIndex; i < finalEmbeds.Count; i += 4)
-                messages.Add(new DiscordMessageBuilder()
-                    .AddEmbeds(finalEmbeds.Skip(i).Take(4).Select(x => x.Build()).ToList()));
+                messages.Add(
+                    new DiscordMessageBuilder()
+                        .AddEmbeds(finalEmbeds.Skip(i).Take(4).Select(x => x.Build()).ToList()));
 
             bool firstMsg = true;
             foreach (DiscordMessageBuilder sendingMessage in messages)
