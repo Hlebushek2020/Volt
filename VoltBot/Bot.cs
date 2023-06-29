@@ -65,16 +65,18 @@ namespace VoltBot
             CommandsNextExtension commands = _discordClient.UseCommandsNext(
                 new CommandsNextConfiguration
                 {
-                    StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix }
+                    StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix },
+                    EnableDefaultHelp = false
                 });
 
             commands.CommandErrored += Commands_CommandErrored;
             commands.CommandExecuted += Commands_CommandExecuted;
 
-            commands.SetHelpFormatter<CustomHelpFormatter>();
+            //commands.SetHelpFormatter<CustomHelpFormatter>();
 
-            commands.RegisterCommands<OwnerCommandModule>();
+            commands.RegisterCommands<HelpCommandModule>();
             commands.RegisterCommands<AdministratorCommandModule>();
+            commands.RegisterCommands<OwnerCommandModule>();
         }
 
         ~Bot() { Dispose(false); }
