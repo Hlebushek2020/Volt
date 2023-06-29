@@ -11,7 +11,7 @@ namespace VoltBot.Commands
     /// </summary>
     public class VoltCommandModule : BaseCommandModule
     {
-        protected static readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-        protected static readonly IReadOnlySettings _settings = Settings.Settings.Current;
+        protected static readonly ILogger DefaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+        protected static readonly IReadOnlySettings Settings = VoltBot.Settings.Settings.Current;
     }
 }

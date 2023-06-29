@@ -60,7 +60,7 @@ namespace VoltBot.Commands
                 .WithTitle(ctx.Member.DisplayName)
                 .WithColor(Constants.SuccessColor);
 
-            if (_settings.BugReport)
+            if (Settings.BugReport)
             {
                 EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
                 DiscordMessage discordMessage = ctx.Message;
@@ -104,7 +104,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, string.Empty);
+                            DefaultLogger.LogWarning(eventId, ex, string.Empty);
                         }
                     }
 
@@ -131,8 +131,8 @@ namespace VoltBot.Commands
                         }
                     }
 
-                    DiscordGuild reportGuild = await ctx.Client.GetGuildAsync(_settings.BugReportServer);
-                    DiscordChannel reportChannel = reportGuild.GetChannel(_settings.BugReportChannel);
+                    DiscordGuild reportGuild = await ctx.Client.GetGuildAsync(Settings.BugReportServer);
+                    DiscordChannel reportChannel = reportGuild.GetChannel(Settings.BugReportChannel);
 
                     await reportChannel.SendMessageAsync(reportMessage);
 
@@ -327,7 +327,7 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        _defaultLogger.LogDebug(
+                        DefaultLogger.LogDebug(
                             eventId,
                             $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {
                                 discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
@@ -341,7 +341,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, string.Empty);
+                            DefaultLogger.LogWarning(eventId, ex, string.Empty);
                         }
                     }
                 }

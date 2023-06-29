@@ -8,7 +8,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using VoltBot.Commands;
-using VoltBot.Commands.Formatter;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Modules;
