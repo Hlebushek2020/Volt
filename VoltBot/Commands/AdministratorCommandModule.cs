@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using VkNet.Model;
 using VoltBot.Database;
 using VoltBot.Database.Entities;
 
@@ -199,7 +197,7 @@ namespace VoltBot.Commands
 
             GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
 
-            if (guildSettings != null && guildSettings.NotificationChannelId.HasValue)
+            if (guildSettings?.NotificationChannelId != null)
             {
                 if (guildSettings.IsReadyNotification != isEnabled)
                 {
@@ -230,7 +228,7 @@ namespace VoltBot.Commands
 
             GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
 
-            if (guildSettings != null && guildSettings.NotificationChannelId.HasValue)
+            if (guildSettings?.NotificationChannelId != null)
             {
                 if (guildSettings.IsShutdownNotification != isEnabled)
                 {

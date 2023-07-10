@@ -1,6 +1,6 @@
-﻿using DSharpPlus;
+﻿using System.Collections.Generic;
+using DSharpPlus;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using VoltBot.Logs.Providers;
 
 namespace VoltBot.Logs
@@ -23,7 +23,7 @@ namespace VoltBot.Logs
 
         private readonly Dictionary<string, ILoggerProvider> _providers = new Dictionary<string, ILoggerProvider>();
 
-        public void AddProvider(ILoggerProvider provider) => _providers.Add(provider.GetType().Name, provider);
+        public void AddProvider(ILoggerProvider provider) => _providers.TryAdd(provider.GetType().Name, provider);
 
         public ILogger CreateLogger(string categoryName)
         {

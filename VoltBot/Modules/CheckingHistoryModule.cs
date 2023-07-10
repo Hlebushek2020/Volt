@@ -1,12 +1,10 @@
-﻿using DSharpPlus;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VoltBot.Database;
 using VoltBot.Database.Entities;
 
@@ -20,7 +18,7 @@ namespace VoltBot.Modules
         {
             using VoltDbContext dbContext = new VoltDbContext();
 
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(e.Guild.Id);
+            GuildSettings guildSettings = await dbContext.GuildSettings.FindAsync(e.Guild.Id);
 
             if (guildSettings != null && guildSettings.HistoryModuleIsEnabled &&
                 guildSettings.HistoryChannelId == e.Channel.Id)
