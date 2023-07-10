@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,9 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using VoltBot.Modules.Notifications;
+using VkNet.Model;
+using VoltBot.Database;
+using VoltBot.Database.Entities;
 
 namespace VoltBot.Commands
 {
@@ -162,17 +165,19 @@ namespace VoltBot.Commands
                 .WithDescription("Канал установлен!")
                 .WithColor(Constants.SuccessColor);
 
-            GuildNotification guildNotification = new GuildNotification(ctx.Guild.Id, target.Id);
-            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification existGuildNotification))
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings == null)
             {
-                guildNotification = new GuildNotification(
-                    ctx.Guild.Id,
-                    target.Id,
-                    existGuildNotification.IsReady,
-                    existGuildNotification.IsShutdown);
+                guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
+                dbContext.GuildSettings.Add(guildSettings);
             }
 
-            BotNotificationsController.Current.AddOrUpdate(guildNotification);
+            guildSettings.NotificationChannelId = target.Id;
+
+            dbContext.SaveChanges();
 
             await ctx.RespondAsync(discordEmbed);
         }
@@ -190,16 +195,15 @@ namespace VoltBot.Commands
                 .WithDescription("Канал для отправки системных уведомлений не установлен!")
                 .WithColor(Constants.ErrorColor);
 
-            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification guildNotification))
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings != null && guildSettings.NotificationChannelId.HasValue)
             {
-                if (guildNotification.IsReady != isEnabled)
+                if (guildSettings.IsReadyNotification != isEnabled)
                 {
-                    GuildNotification newGuildNotification = new GuildNotification(
-                        guildNotification.GuildId,
-                        guildNotification.ChannelId,
-                        isEnabled,
-                        guildNotification.IsShutdown);
-                    BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
+                   guildSettings.IsReadyNotification = isEnabled;
                 }
 
                 discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -222,16 +226,15 @@ namespace VoltBot.Commands
                 .WithDescription("Канал для отправки системных уведомлений не установлен!")
                 .WithColor(Constants.ErrorColor);
 
-            if (BotNotificationsController.Current.Get(ctx.Guild.Id, out GuildNotification guildNotification))
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings != null && guildSettings.NotificationChannelId.HasValue)
             {
-                if (guildNotification.IsShutdown != isEnabled)
+                if (guildSettings.IsShutdownNotification != isEnabled)
                 {
-                    GuildNotification newGuildNotification = new GuildNotification(
-                        guildNotification.GuildId,
-                        guildNotification.ChannelId,
-                        guildNotification.IsReady,
-                        isEnabled);
-                    BotNotificationsController.Current.AddOrUpdate(newGuildNotification);
+                    guildSettings.IsShutdownNotification = isEnabled;
                 }
 
                 discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -240,6 +243,131 @@ namespace VoltBot.Commands
 
             await ctx.RespondAsync(discordEmbed);
         }
+        #endregion
+
+        #region History
+        [Command("checking-history")]
+        [Aliases("ch-hist")]
+        [Description("Включить / Отключить управление историями")]
+        public async Task CheckingHistory(CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+               .WithTitle(ctx.Member.DisplayName)
+               .WithDescription("Канал историй не установлен!")
+               .WithColor(Constants.ErrorColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings != null && guildSettings.HistoryModuleIsEnabled)
+            {
+                if (guildSettings.HistoryModuleIsEnabled != isEnabled)
+                {
+                    guildSettings.HistoryModuleIsEnabled = isEnabled;
+                }
+
+                discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
+                  .WithColor(Constants.SuccessColor);
+            }
+            /*else if (guildSettings != null && !guildSettings.HistoryStartMessageId.HasValue) {
+                discordEmbed.WithDescription("Начальное сообщение истории не установлено!");
+            }*/
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("checking-history-settings")]
+        [Aliases("ch-hist-settings", "hist-settings", "checking-settings")]
+        [Description("Задать настройки для управления историями")]
+        public async Task CheckingHistorySettings(CommandContext ctx,
+            [Description("Канал историй")]
+            DiscordChannel historyChannel,
+            [Description("Количество допустимых слов для добавления за сообщение (Допустимые значения: 1 - 255)")]
+            byte wordCount,
+            [Description("Канал для уведомлений о некорректном сообщении")]
+            DiscordChannel adminNotificationChannel)
+        {
+            if (wordCount == 0)
+            {
+                throw new ArgumentException();
+            }
+
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+               .WithTitle(ctx.Member.DisplayName)
+               .WithDescription("Настройки установлены!")
+               .WithColor(Constants.SuccessColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings == null)
+            {
+                guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
+                dbContext.GuildSettings.Add(guildSettings);
+            }
+
+            guildSettings.HistoryChannelId = historyChannel.Id;
+            guildSettings.HistoryWordCount = wordCount;
+            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel?.Id; 
+
+            dbContext.SaveChanges();
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        /*
+        [Command("new-history")]
+        [Aliases("new-hist")]
+        [Description("Установить начальное сообщение истории. Если данная команда не является ответом на сообщение, то началом истории будет установлено последнее сообщение в соответствующем канале. В противном случае началом будет установлено то сообщение на которое данная команда является ответом.")]
+        public async Task NewHistory(CommandContext ctx)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+               .WithTitle(ctx.Member.DisplayName)
+               .WithDescription("Канал историй не установлен!")
+               .WithColor(Constants.ErrorColor);
+
+            VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings != null && guildSettings.HistoryChannelId.HasValue)
+            {
+                DiscordMessage startMessage = null;
+                if (ctx.Message.ReferencedMessage != null)
+                {
+                    if (ctx.Message.ReferencedMessage.ChannelId != guildSettings.HistoryChannelId)
+                    {
+                        discordEmbed.WithDescription("Задаваемое начальное сообщение не из канала историй!");
+                    }
+                    else
+                    {
+                        startMessage = ctx.Message.ReferencedMessage;
+                    }
+                }
+                else
+                {
+                    DiscordChannel discordChannel = await ctx.Client.GetChannelAsync(guildSettings.HistoryChannelId.Value);
+                    startMessage = (await discordChannel.GetMessagesAsync(1)).First();
+                }
+
+                if (startMessage != null)
+                {
+                    discordEmbed.WithDescription("Начальное сообщение истории установлено!")
+                  .WithColor(Constants.ErrorColor);
+
+                    guildSettings.HistoryStartMessageId = startMessage.Id;
+
+                    dbContext.SaveChanges();
+                }
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+        */
         #endregion
 
         #region NOT COMMAND

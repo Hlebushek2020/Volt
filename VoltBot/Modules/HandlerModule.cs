@@ -3,6 +3,7 @@ using DSharpPlus;
 using Microsoft.Extensions.Logging;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
+using LoggerFactory = VoltBot.Logs.LoggerFactory;
 
 namespace VoltBot.Modules
 {

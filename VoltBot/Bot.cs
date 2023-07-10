@@ -11,8 +11,8 @@ using VoltBot.Commands;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Modules;
-using VoltBot.Modules.Notifications;
 using VoltBot.Settings;
+using LoggerFactory = VoltBot.Logs.LoggerFactory;
 
 namespace VoltBot
 {
@@ -57,6 +57,7 @@ namespace VoltBot
             _discordClient.MessageCreated += new ForwardingMessageByUrlModule().Handler;
             _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
             _discordClient.MessageCreated += new BotPingModule().Handler;
+            _discordClient.MessageCreated += new CheckingHistoryModule().Handler;
             _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
 
             _botNotificationsModule = new BotNotificationsModule(_discordClient);

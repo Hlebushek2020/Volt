@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using VoltBot.Logs;
 using VoltBot.Logs.Providers;
 using VoltBot.Settings;
+using LoggerFactory = VoltBot.Logs.LoggerFactory;
 
 namespace VoltBot.Commands
 {

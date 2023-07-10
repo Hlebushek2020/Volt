@@ -13,8 +13,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01608" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01608" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01619" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01619" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
         <PackageReference Include="VkNet" Version="1.74.0" />
     </ItemGroup>
 
