@@ -18,7 +18,7 @@ namespace VoltBot.Modules
             if ($"<@{sender.CurrentUser.Id}>".Equals(messageContent) ||
                 messageContent.Equals(Settings.Settings.Current.BotPrefix, StringComparison.InvariantCultureIgnoreCase))
             {
-                _defaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
+                DefaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
 
                 DiscordMember discordMember = await e.Message.Channel.Guild.GetMemberAsync(e.Message.Author.Id);
                 await e.Message.RespondAsync(

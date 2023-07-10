@@ -203,7 +203,7 @@ namespace VoltBot.Commands
             {
                 if (guildSettings.IsReadyNotification != isEnabled)
                 {
-                   guildSettings.IsReadyNotification = isEnabled;
+                    guildSettings.IsReadyNotification = isEnabled;
                 }
 
                 discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -249,14 +249,15 @@ namespace VoltBot.Commands
         [Command("checking-history")]
         [Aliases("ch-hist")]
         [Description("Включить / Отключить управление историями")]
-        public async Task CheckingHistory(CommandContext ctx,
+        public async Task CheckingHistory(
+            CommandContext ctx,
             [Description("true - включить / false - выключить")]
             bool isEnabled)
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-               .WithTitle(ctx.Member.DisplayName)
-               .WithDescription("Канал историй не установлен!")
-               .WithColor(Constants.ErrorColor);
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал историй не установлен!")
+                .WithColor(Constants.ErrorColor);
 
             using VoltDbContext dbContext = new VoltDbContext();
 
@@ -270,7 +271,7 @@ namespace VoltBot.Commands
                 }
 
                 discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
-                  .WithColor(Constants.SuccessColor);
+                    .WithColor(Constants.SuccessColor);
             }
             /*else if (guildSettings != null && !guildSettings.HistoryStartMessageId.HasValue) {
                 discordEmbed.WithDescription("Начальное сообщение истории не установлено!");
@@ -282,7 +283,8 @@ namespace VoltBot.Commands
         [Command("checking-history-settings")]
         [Aliases("ch-hist-settings", "hist-settings", "checking-settings")]
         [Description("Задать настройки для управления историями")]
-        public async Task CheckingHistorySettings(CommandContext ctx,
+        public async Task CheckingHistorySettings(
+            CommandContext ctx,
             [Description("Канал историй")]
             DiscordChannel historyChannel,
             [Description("Количество допустимых слов для добавления за сообщение (Допустимые значения: 1 - 255)")]
@@ -296,9 +298,9 @@ namespace VoltBot.Commands
             }
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-               .WithTitle(ctx.Member.DisplayName)
-               .WithDescription("Настройки установлены!")
-               .WithColor(Constants.SuccessColor);
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Настройки установлены!")
+                .WithColor(Constants.SuccessColor);
 
             using VoltDbContext dbContext = new VoltDbContext();
 
@@ -312,7 +314,7 @@ namespace VoltBot.Commands
 
             guildSettings.HistoryChannelId = historyChannel.Id;
             guildSettings.HistoryWordCount = wordCount;
-            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel?.Id; 
+            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel?.Id;
 
             dbContext.SaveChanges();
 

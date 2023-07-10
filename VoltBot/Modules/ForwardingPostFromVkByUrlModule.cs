@@ -29,14 +29,14 @@ namespace VoltBot.Modules
 
         public ForwardingPostFromVkByUrlModule()
         {
-            _defaultLogger.LogInformation(_eventId, "Connection to vk");
+            DefaultLogger.LogInformation(_eventId, "Connection to vk");
             try
             {
                 _vkApi.Authorize(new ApiAuthParams() { AccessToken = Settings.Settings.Current.VkSecret });
             }
             catch (Exception ex)
             {
-                _defaultLogger.LogError(_eventId, ex, "Fail connecting to vk");
+                DefaultLogger.LogError(_eventId, ex, "Fail connecting to vk");
             }
         }
 
@@ -52,7 +52,7 @@ namespace VoltBot.Modules
 
                 if (!string.IsNullOrWhiteSpace(id))
                 {
-                    _defaultLogger.LogInformation(
+                    DefaultLogger.LogInformation(
                         _eventId,
                         $"{e.Message.Author.Username}#{e.Message.Author.Discriminator}{
                             (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : string.Empty)}, {e.Message.Id}");
@@ -78,13 +78,13 @@ namespace VoltBot.Modules
             }
             catch (Exception ex)
             {
-                _defaultLogger.LogWarning($"Error parsing a post ({postId}) from a VK group", _eventId, ex);
+                DefaultLogger.LogWarning($"Error parsing a post ({postId}) from a VK group", _eventId, ex);
                 return;
             }
 
             if (post?.WallPosts == null || post.WallPosts.Count == 0)
             {
-                _defaultLogger.LogDebug($"Failed to get VK post ({postId}) by link", _eventId);
+                DefaultLogger.LogDebug($"Failed to get VK post ({postId}) by link", _eventId);
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace VoltBot.Modules
             Post sourcePost = wallPost;
             if (wallPost == null)
             {
-                _defaultLogger.LogDebug(
+                DefaultLogger.LogDebug(
                     $"Failed to get VK post from WallPosts collection (original post {postId})",
                     _eventId);
                 return;
@@ -139,7 +139,7 @@ namespace VoltBot.Modules
                 Group group = post.Groups.FirstOrDefault();
                 if (group == null)
                 {
-                    _defaultLogger.LogInformation(
+                    DefaultLogger.LogInformation(
                         $"Failed to get information about the author of the VK post ({wallPost.FromId})",
                         _eventId);
                     return;
@@ -154,7 +154,7 @@ namespace VoltBot.Modules
                 User user = post.Profiles.FirstOrDefault();
                 if (user == null)
                 {
-                    _defaultLogger.LogInformation(
+                    DefaultLogger.LogInformation(
                         $"Failed to get information about the author of the VK post ({wallPost.FromId})",
                         _eventId);
                     return;
@@ -193,7 +193,7 @@ namespace VoltBot.Modules
                         fields.Add(strPoll);
                         break;
                     default:
-                        _defaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
+                        DefaultLogger.LogDebug($"Unknown VK Attachment Type: {attachment.Type.Name}", _eventId);
                         break;
                 }
             }

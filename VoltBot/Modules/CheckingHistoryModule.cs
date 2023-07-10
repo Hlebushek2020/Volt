@@ -22,13 +22,17 @@ namespace VoltBot.Modules
 
             GuildSettings guildSettings = dbContext.GuildSettings.Find(e.Guild.Id);
 
-            if (guildSettings != null && guildSettings.HistoryModuleIsEnabled && guildSettings.HistoryChannelId == e.Channel.Id) {
+            if (guildSettings != null && guildSettings.HistoryModuleIsEnabled &&
+                guildSettings.HistoryChannelId == e.Channel.Id)
+            {
                 IReadOnlyList<DiscordMessage> beforeMessages = await e.Channel.GetMessagesBeforeAsync(e.Message.Id, 1);
                 DiscordMessage beforeMessage = beforeMessages.FirstOrDefault();
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
                 string[] currentParts = e.Message.Content.Replace("  ", " ").Split(' ');
-                if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount) {
-                    DiscordChannel discordChannel = await sender.GetChannelAsync(guildSettings.HistoryAdminNotificationChannelId.Value);
+                if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount)
+                {
+                    DiscordChannel discordChannel =
+                        await sender.GetChannelAsync(guildSettings.HistoryAdminNotificationChannelId.Value);
 
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                         .WithTitle(_eventId.Name)

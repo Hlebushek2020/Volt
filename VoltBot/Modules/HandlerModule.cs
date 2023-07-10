@@ -9,7 +9,7 @@ namespace VoltBot.Modules
 {
     public abstract class HandlerModule<THandlerArgs>
     {
-        protected static readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
+        protected static readonly ILogger DefaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
 
         public abstract Task Handler(DiscordClient sender, THandlerArgs e);
     }

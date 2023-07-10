@@ -17,7 +17,7 @@ namespace VoltBot.Modules
 
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
-                _defaultLogger.LogInformation(
+                DefaultLogger.LogInformation(
                     _eventId,
                     $"{e.User.Username}#{e.User.Discriminator}{
                         (e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : string.Empty)}, {e.Message.Id}");

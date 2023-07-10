@@ -42,7 +42,7 @@ namespace VoltBot.Modules
 
             if (resendMessageLocation != null)
             {
-                _defaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
+                DefaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
 
                 DiscordChannel discordChannel = await sender.GetChannelAsync(resendMessageLocation.Item2);
                 DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
@@ -95,7 +95,7 @@ namespace VoltBot.Modules
                             }
                             catch (Exception ex)
                             {
-                                _defaultLogger.LogWarning(_eventId, ex, string.Empty);
+                                DefaultLogger.LogWarning(_eventId, ex, string.Empty);
                             }
                         }
                     }

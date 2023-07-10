@@ -18,7 +18,7 @@ internal class BotNotificationsModule
     private static readonly EventId _eventId = new EventId(0, "Bot Notifications");
     private static readonly ILogger _defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
 
-    private readonly DiscordClient _discordClient; 
+    private readonly DiscordClient _discordClient;
 
     public BotNotificationsModule(DiscordClient discordClient) { _discordClient = discordClient; }
 
@@ -26,7 +26,8 @@ internal class BotNotificationsModule
         SendNotifications("Бот снова в сети!", new VoltDbContext().GuildSettings.Where(gs => gs.IsReadyNotification));
 
     public Task SendShutdownNotifications(string reason) =>
-        SendNotifications($"Отключение бота по следующей причине: {reason}", new VoltDbContext().GuildSettings.Where(gs => gs.IsShutdownNotification));
+        SendNotifications($"Отключение бота по следующей причине: {reason}",
+            new VoltDbContext().GuildSettings.Where(gs => gs.IsShutdownNotification));
 
     private async Task SendNotifications(string message, IEnumerable<GuildSettings> guilds)
     {
@@ -38,17 +39,16 @@ internal class BotNotificationsModule
 
         foreach (GuildSettings guildSettings in guilds)
         {
-            
-                try
-                {
-                    DiscordChannel discordChannel = await _discordClient.GetChannelAsync(guildSettings.NotificationChannelId.Value);
-                    await discordChannel.SendMessageAsync(discordEmbed);
-                }
-                catch (Exception ex)
-                {
-                    _defaultLogger.LogWarning(_eventId, ex, string.Empty);
-                }
-            
+            try
+            {
+                DiscordChannel discordChannel =
+                    await _discordClient.GetChannelAsync(guildSettings.NotificationChannelId.Value);
+                await discordChannel.SendMessageAsync(discordEmbed);
+            }
+            catch (Exception ex)
+            {
+                _defaultLogger.LogWarning(_eventId, ex, string.Empty);
+            }
         }
     }
 }
