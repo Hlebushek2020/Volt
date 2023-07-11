@@ -202,6 +202,7 @@ namespace VoltBot.Commands
                 if (guildSettings.IsReadyNotification != isEnabled)
                 {
                     guildSettings.IsReadyNotification = isEnabled;
+                    await dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -233,6 +234,7 @@ namespace VoltBot.Commands
                 if (guildSettings.IsShutdownNotification != isEnabled)
                 {
                     guildSettings.IsShutdownNotification = isEnabled;
+                    await dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -266,6 +268,7 @@ namespace VoltBot.Commands
                 if (guildSettings.HistoryModuleIsEnabled != isEnabled)
                 {
                     guildSettings.HistoryModuleIsEnabled = isEnabled;
+                    await dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
