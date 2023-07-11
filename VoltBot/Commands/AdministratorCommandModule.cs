@@ -291,7 +291,9 @@ namespace VoltBot.Commands
             [Description("Количество допустимых слов для добавления за сообщение (Допустимые значения: 1 - 255)")]
             byte wordCount,
             [Description("Канал для уведомлений о некорректном сообщении")]
-            DiscordChannel adminNotificationChannel)
+            DiscordChannel adminNotificationChannel,
+            [Description("Пингуемая роль при некорректном сообщении")]
+            DiscordRole adminPingRole)
         {
             if (wordCount == 0)
             {
@@ -315,7 +317,8 @@ namespace VoltBot.Commands
 
             guildSettings.HistoryChannelId = historyChannel.Id;
             guildSettings.HistoryWordCount = wordCount;
-            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel?.Id;
+            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel.Id;
+            guildSettings.HistoryAdminPingRole = adminPingRole.Id;
 
             dbContext.SaveChanges();
 

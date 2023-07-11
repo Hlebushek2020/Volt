@@ -34,7 +34,7 @@ namespace VoltBot.Modules
 
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                         .WithTitle(_eventId.Name)
-                        .WithDescription(e.Message.JumpLink.ToString())
+                        .WithDescription($"<@&{guildSettings.HistoryAdminPingRole}> {e.Message.JumpLink}")
                         .WithColor(Constants.WarningColor);
 
                     await discordChannel.SendMessageAsync(discordEmbed);
