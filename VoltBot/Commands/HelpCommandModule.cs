@@ -45,7 +45,7 @@ internal class HelpCommandModule : VoltCommandModule
 
                 descriptionBuilder
                     .AppendLine(
-                        $"```\n{Settings.BotPrefix} {commandObj.Name} {string.Join(
+                        $"```\n{Settings.BotPrefix}{commandObj.Name} {string.Join(
                             ' ',
                             commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```{commandObj.Description}")
                     .AppendLine();

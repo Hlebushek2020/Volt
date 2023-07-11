@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.IO;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using VoltBot.Database.Entities;
 
 namespace VoltBot.Database
@@ -9,7 +11,14 @@ namespace VoltBot.Database
 
         public DbSet<GuildSettings> GuildSettings { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
-            optionsBuilder.UseSqlite("Data Source=volt.db");
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            string databaseDirectoryPath = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                "database");
+            if (!Directory.Exists(databaseDirectoryPath))
+                Directory.CreateDirectory(databaseDirectoryPath);
+            optionsBuilder.UseSqlite($"Data Source={Path.Combine(databaseDirectoryPath, "volt.db")}");
+        }
     }
 }
