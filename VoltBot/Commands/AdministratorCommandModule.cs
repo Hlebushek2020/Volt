@@ -263,7 +263,7 @@ namespace VoltBot.Commands
 
             GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
 
-            if (guildSettings != null && guildSettings.HistoryModuleIsEnabled)
+            if (guildSettings?.HistoryChannelId != null)
             {
                 if (guildSettings.HistoryModuleIsEnabled != isEnabled)
                 {
