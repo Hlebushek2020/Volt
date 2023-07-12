@@ -23,6 +23,9 @@ namespace VoltBot.Modules
             if (guildSettings != null && guildSettings.HistoryModuleIsEnabled &&
                 guildSettings.HistoryChannelId == e.Channel.Id)
             {
+                DefaultLogger.LogInformation(
+                    _eventId,
+                    $"{e.Message.Author.Username}#{e.Message.Author.Discriminator} {e.Message.JumpLink}");
                 IReadOnlyList<DiscordMessage> beforeMessages = await e.Channel.GetMessagesBeforeAsync(e.Message.Id, 1);
                 DiscordMessage beforeMessage = beforeMessages.FirstOrDefault();
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
