@@ -37,10 +37,18 @@ namespace VoltBot.Modules
 
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                         .WithTitle(_eventId.Name)
-                        .WithDescription($"<@&{guildSettings.HistoryAdminPingRole}> {e.Message.JumpLink}")
+                        .WithDescription(e.Message.JumpLink.ToString())
                         .WithColor(Constants.WarningColor);
 
-                    await discordChannel.SendMessageAsync(discordEmbed);
+                    RoleMention roleMention = new RoleMention(guildSettings.HistoryAdminPingRole.Value);
+
+                    // For ping to work, the role must be specified in the Сontent and Mention
+                    DiscordMessageBuilder discordMessage = new DiscordMessageBuilder()
+                        .WithContent($"<@&{guildSettings.HistoryAdminPingRole.Value}>")
+                        .AddMention(roleMention)
+                        .AddEmbed(discordEmbed.Build());
+
+                    await discordChannel.SendMessageAsync(discordMessage);
                 }
             }
         }
