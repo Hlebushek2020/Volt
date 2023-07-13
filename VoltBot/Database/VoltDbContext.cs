@@ -13,9 +13,7 @@ namespace VoltBot.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string databaseDirectoryPath = Path.Combine(
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                "database");
+            string databaseDirectoryPath = Path.Combine(Program.Directory, "database");
             if (!Directory.Exists(databaseDirectoryPath))
                 Directory.CreateDirectory(databaseDirectoryPath);
             optionsBuilder.UseSqlite($"Data Source={Path.Combine(databaseDirectoryPath, "volt.db")}");

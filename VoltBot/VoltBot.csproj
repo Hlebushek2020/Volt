@@ -16,6 +16,10 @@
         <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01619" />
         <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01619" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.8" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+        <PackageReference Include="Serilog" Version="3.0.1" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="VkNet" Version="1.74.0" />
     </ItemGroup>
 

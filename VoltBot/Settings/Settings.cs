@@ -8,8 +8,11 @@ namespace VoltBot.Settings
 {
     internal class Settings : IReadOnlySettings
     {
+        private const string FileName = "settings.json";
+
+        #region Property
         public string BotToken { get; set; }
-        public string BotPrefix { get; set; } = ">volt";
+        public string BotPrefix { get; set; } = "volt>";
         public string BotDescription { get; set; } = string.Empty;
         public string VkSecret { get; set; }
         public bool BugReport { get; set; } = false;
@@ -17,6 +20,7 @@ namespace VoltBot.Settings
         public ulong BugReportServer { get; set; }
         public LogLevel DiscordApiLogLevel { get; set; } = LogLevel.Information;
         public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
+        #endregion
 
         #region Instance
         private static Settings _settings;
@@ -28,9 +32,7 @@ namespace VoltBot.Settings
             {
                 if (_settings == null)
                 {
-                    string settingsFile = Path.Combine(
-                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                        "settings.json");
+                    string settingsFile = Path.Combine(Program.Directory, FileName);
                     _settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
                 }
                 return _settings;
@@ -40,19 +42,15 @@ namespace VoltBot.Settings
 
         public static bool Availability()
         {
-            string settingsPath = Path.Combine(
-                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                "settings.json");
+            string settingsPath = Path.Combine(Program.Directory, FileName);
 
             if (File.Exists(settingsPath))
             {
                 return true;
             }
 
-            using (StreamWriter streamWriter = new StreamWriter(settingsPath, false, Encoding.UTF8))
-            {
-                streamWriter.Write(JsonConvert.SerializeObject(new Settings(), Formatting.Indented));
-            }
+            using StreamWriter streamWriter = new StreamWriter(settingsPath, false, Encoding.UTF8);
+            streamWriter.Write(JsonConvert.SerializeObject(new Settings(), Formatting.Indented));
 
             return false;
         }

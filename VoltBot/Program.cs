@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using VoltBot.Logs;
@@ -10,10 +11,12 @@ namespace VoltBot
     internal class Program
     {
         public static string Version { get; }
+        public static string Directory { get; }
 
         static Program()
         {
             Assembly currentAssembly = Assembly.GetExecutingAssembly();
+            Directory = Path.GetDirectoryName(currentAssembly.Location) ?? string.Empty;
             AssemblyInformationalVersionAttribute informationalVersionAttribute =
                 currentAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             if (informationalVersionAttribute != null)
@@ -22,7 +25,7 @@ namespace VoltBot
             }
             else
             {
-                Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                Version version = currentAssembly.GetName().Version;
                 Version = $"{version.Major}.{version.Minor}.{version.Build}";
             }
         }
