@@ -8,16 +8,25 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 
-namespace VoltBot.Modules
+namespace VoltBot.Services.Implementation
 {
-    internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
+    internal class ForwardingMessageByUrlService : IForwardingMessageByUrlService
     {
-        private static readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
-
         private static readonly Regex _messagePattern =
             new Regex(
                 @"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
                 RegexOptions.Compiled);
+
+        private readonly ILogger<ForwardingMessageByUrlService> _logger;
+
+        public ForwardingMessageByUrlService(DiscordClient discordClient, ILogger<ForwardingMessageByUrlService> logger)
+        {
+            _logger = logger;
+
+            discordClient.MessageCreated += Handler;
+
+            _logger.LogInformation($"{nameof(ForwardingMessageByUrlService)} loaded.");
+        }
 
         private static Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
         {
@@ -36,13 +45,14 @@ namespace VoltBot.Modules
             return null;
         }
 
-        public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
+        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
             Tuple<ulong, ulong, ulong> resendMessageLocation = GetMessageLocation(e.Message.Content);
 
             if (resendMessageLocation != null)
             {
-                DefaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
+                _logger.LogInformation(
+                    $"Guild: {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
 
                 DiscordChannel discordChannel = await sender.GetChannelAsync(resendMessageLocation.Item2);
                 DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
@@ -95,7 +105,7 @@ namespace VoltBot.Modules
                             }
                             catch (Exception ex)
                             {
-                                DefaultLogger.LogWarning(_eventId, ex, string.Empty);
+                                _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                             }
                         }
                     }

@@ -12,8 +12,12 @@ namespace VoltBot.Commands
     /// Command module containing only those commands that are available to the bot owner
     /// </summary>
     [RequireOwner]
-    internal class OwnerCommandModule : VoltCommandModule
+    internal class OwnerCommandModule : BaseCommandModule
     {
+        private readonly IBot _bot;
+
+        public OwnerCommandModule(IBot bot) { _bot = bot; }
+
         [Command("shutdown")]
         [Aliases("sd")]
         [Description("Выключить бота")]
@@ -23,7 +27,7 @@ namespace VoltBot.Commands
             string reason)
         {
             await ctx.RespondAsync("Ok");
-            Bot.Current.Shutdown(reason);
+            _bot.Shutdown(reason);
         }
 
         [Command("status")]
@@ -37,11 +41,9 @@ namespace VoltBot.Commands
                 .AddField(
                     "Сборка",
                     $"v{Program.Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
-                .AddField(
-                    "Дата запуска",
-                    $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
+                .AddField("Дата запуска", $"{_bot.StartDateTime:dd.MM.yyyy} {_bot.StartDateTime:HH:mm:ss zzz}");
 
-            TimeSpan timeSpan = DateTime.Now - Bot.Current.StartDateTime;
+            TimeSpan timeSpan = DateTime.Now - _bot.StartDateTime;
 
             discordEmbed.AddField(
                 "Время работы",

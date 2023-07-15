@@ -2,14 +2,16 @@
 using System.IO;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
-using LoggerFactory = VoltBot.Logs.LoggerFactory;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace VoltBot
 {
     internal class Program
     {
+        private const string LogOutputTemplate =
+            "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] [{SourceContext}] {Message}{NewLine}{Exception}";
+
         public static string Version { get; }
         public static string Directory { get; }
 
@@ -32,26 +34,49 @@ namespace VoltBot
 
         static int Main(string[] args)
         {
-            if (!Settings.Settings.Availability())
+            if (!Settings.Availability())
             {
                 return 0;
             }
 
-            bool isShutdown = false;
-            while (!isShutdown)
+            ISettings settings = Settings.Load();
+
+            LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
+                .WriteTo.Console(
+                    outputTemplate: LogOutputTemplate,
+                    theme: SystemConsoleTheme.Colored)
+                .WriteTo.File(
+                    path: Path.Combine(Directory, "logs", ".log"),
+                    outputTemplate: LogOutputTemplate,
+                    rollingInterval: RollingInterval.Day)
+                .Enrich.FromLogContext();
+
+            loggerConfiguration = settings.BotLogLevel switch
             {
-                try
-                {
-                    using Bot volt = Bot.Current;
-                    volt.RunAsync().GetAwaiter().GetResult();
-                    isShutdown = true;
-                }
-                catch (Exception ex)
-                {
-                    ILogger defaultLogger = LoggerFactory.Current.CreateLogger<DefaultLoggerProvider>();
-                    defaultLogger.LogCritical(new EventId(0, "App"), ex, string.Empty);
-                }
+                LogLevel.Critical => loggerConfiguration.MinimumLevel.Fatal(),
+                LogLevel.Error => loggerConfiguration.MinimumLevel.Error(),
+                LogLevel.Warning => loggerConfiguration.MinimumLevel.Warning(),
+                LogLevel.Information => loggerConfiguration.MinimumLevel.Information(),
+                _ => loggerConfiguration.MinimumLevel.Debug()
+            };
+
+            Log.Logger = loggerConfiguration.CreateLogger();
+
+            //bool isShutdown = false;
+            //while (!isShutdown)
+            //{
+            try
+            {
+                using Bot volt = new Bot(settings);
+                volt.RunAsync().GetAwaiter().GetResult();
+                //isShutdown = true;
             }
+            catch (Exception ex)
+            {
+                Log.Logger.ForContext<Program>().Fatal(ex, "Bot failed.");
+                return 1;
+            }
+            //}
 
             return 0;
         }

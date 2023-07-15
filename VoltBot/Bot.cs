@@ -6,41 +6,35 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using VoltBot.Commands;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
-using VoltBot.Modules;
-using VoltBot.Settings;
-using LoggerFactory = VoltBot.Logs.LoggerFactory;
+using VoltBot.Services;
+using VoltBot.Services.Implementation;
 
 namespace VoltBot
 {
-    public sealed class Bot : IDisposable
+    public sealed class Bot : IBot, IDisposable
     {
         public DateTime StartDateTime { get; private set; }
-
-        #region Instance
-        private static Bot _currentInstance;
-
-        public static Bot Current => _currentInstance ??= new Bot();
-        #endregion
 
         private volatile bool _isRunning = false;
         private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
-        private readonly ILogger _defaultLogger;
-        private readonly BotNotificationsModule _botNotificationsModule;
+        private readonly ILogger<Bot> _logger;
+        private readonly IBotNotificationsService _botNotificationsService;
+        private readonly ISettings _settings;
+        private readonly IServiceProvider _services;
 
-        public Bot()
+        public Bot(ISettings settings)
         {
-            IReadOnlySettings settings = Settings.Settings.Current;
+            _settings = settings;
 
-            LoggerFactory loggerFactory = LoggerFactory.Current;
-            loggerFactory.AddProvider(new DiscordClientLoggerProvider(settings.DiscordApiLogLevel));
-            _defaultLogger = loggerFactory.CreateLogger<DefaultLoggerProvider>();
+            ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(dispose: true);
+            _logger = loggerFactory.CreateLogger<Bot>();
 
-            _defaultLogger.LogInformation(new EventId(0, "Init"), "Initializing discord client");
+            _logger.LogInformation(new EventId(0, "Init"), "Initializing discord client");
 
             _discordClient = new DiscordClient(
                 new DiscordConfiguration
@@ -48,31 +42,42 @@ namespace VoltBot
                     Token = settings.BotToken,
                     TokenType = TokenType.Bot,
                     Intents = DiscordIntents.All,
-                    LoggerFactory = loggerFactory
+                    LoggerFactory = new LoggerFactory().AddSerilog(dispose: true)
                 });
 
             _discordClient.Ready += DiscordClient_Ready;
-            //_discordClient.SocketErrored += DiscordClient_SocketErrored;
 
-            _discordClient.MessageCreated += new ForwardingMessageByUrlModule().Handler;
-            _discordClient.MessageCreated += new ForwardingPostFromVkByUrlModule().Handler;
-            _discordClient.MessageCreated += new BotPingModule().Handler;
-            _discordClient.MessageCreated += new CheckingHistoryModule().Handler;
-            _discordClient.MessageReactionAdded += new DeletingMessagesByEmojiModule().Handler;
+            _services = new ServiceCollection()
+                .AddLogging(lb => lb.AddSerilog(dispose: true))
+                .AddSingleton(_discordClient)
+                .AddSingleton<ISettings>(settings)
+                .AddSingleton(typeof(IBot), this)
+                .AddSingleton<IForwardingMessageByUrlService, ForwardingMessageByUrlService>()
+                .AddSingleton<IForwardingPostFromVkByUrlService, ForwardingPostFromVkByUrlService>()
+                .AddSingleton<IBotPingService, BotPingService>()
+                .AddSingleton<ICheckingHistoryService, CheckingHistoryService>()
+                .AddSingleton<IDeletingMessagesByEmojiService, DeletingMessagesByEmojiService>()
+                .AddSingleton<IBotNotificationsService, BotNotificationsService>()
+                .BuildServiceProvider();
 
-            _botNotificationsModule = new BotNotificationsModule(_discordClient);
+            _services.GetService<IForwardingMessageByUrlService>();
+            _services.GetService<IForwardingPostFromVkByUrlService>();
+            _services.GetService<IBotPingService>();
+            _services.GetService<ICheckingHistoryService>();
+            _services.GetService<IDeletingMessagesByEmojiService>();
+
+            _botNotificationsService = _services.GetService<IBotNotificationsService>();
 
             CommandsNextExtension commands = _discordClient.UseCommandsNext(
                 new CommandsNextConfiguration
                 {
-                    StringPrefixes = new List<string> { Settings.Settings.Current.BotPrefix },
-                    EnableDefaultHelp = false
+                    StringPrefixes = new List<string> { settings.BotPrefix },
+                    EnableDefaultHelp = false,
+                    Services = _services
                 });
 
             commands.CommandErrored += Commands_CommandErrored;
             commands.CommandExecuted += Commands_CommandExecuted;
-
-            //commands.SetHelpFormatter<CustomHelpFormatter>();
 
             commands.RegisterCommands<HelpCommandModule>();
             commands.RegisterCommands<AdministratorCommandModule>();
@@ -81,9 +86,9 @@ namespace VoltBot
 
         ~Bot() { Dispose(false); }
 
-        private static async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+        private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
             await sender.UpdateStatusAsync(
-                new DiscordActivity($"на тебя | {Settings.Settings.Current.BotPrefix}help", ActivityType.Watching));
+                new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
 
         /*private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
         {
@@ -94,7 +99,7 @@ namespace VoltBot
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
-            _defaultLogger.LogInformation(
+            _logger.LogInformation(
                 new EventId(0, $"Command: {e.Command.Name}"),
                 "Command completed successfully");
             return Task.CompletedTask;
@@ -115,12 +120,12 @@ namespace VoltBot
             {
                 embed.WithDescription(
                     $"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
-                _defaultLogger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, string.Empty);
+                _logger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, string.Empty);
             }
             else if (exception is CommandNotFoundException commandNotFoundEx)
             {
                 embed.WithDescription($"Неизвестная команда `{commandNotFoundEx.CommandName}`");
-                _defaultLogger.LogWarning(
+                _logger.LogWarning(
                     new EventId(0, $"Command: {commandNotFoundEx.CommandName}"),
                     exception,
                     string.Empty);
@@ -128,7 +133,7 @@ namespace VoltBot
             else if (exception is ChecksFailedException checksFailedEx)
             {
                 embed.WithDescription($"У вас нет доступа к команде `{checksFailedEx.Command.Name}`");
-                _defaultLogger.LogWarning(
+                _logger.LogWarning(
                     new EventId(0, $"Command: {checksFailedEx.Command.Name}"),
                     exception,
                     string.Empty);
@@ -137,7 +142,7 @@ namespace VoltBot
             {
                 embed.WithDescription(
                     "При выполнении команды произошла неизвестная ошибка, обратитесь к администраторам сервера (гильдии)");
-                _defaultLogger.LogError(
+                _logger.LogError(
                     new EventId(0, $"Command: {e.Command?.Name ?? "Unknown"}"),
                     exception,
                     string.Empty);
@@ -148,13 +153,13 @@ namespace VoltBot
 
         public async Task RunAsync()
         {
-            _defaultLogger.LogInformation(new EventId(0, "Run"), "Discord client connect");
+            _logger.LogInformation(new EventId(0, "Run"), "Discord client connect");
 
             await _discordClient.ConnectAsync();
             StartDateTime = DateTime.Now;
             _isRunning = true;
 
-            await _botNotificationsModule.SendReadyNotifications();
+            await _botNotificationsService.SendReadyNotifications();
 
             while (_isRunning)
             {
@@ -165,16 +170,16 @@ namespace VoltBot
         public void Shutdown(string reason = null)
         {
             EventId eventId = new EventId(0, "Shutdown");
-            _defaultLogger.LogInformation(eventId, "Shutdown");
+            _logger.LogInformation(eventId, "Shutdown");
 
             if (_discordClient != null)
             {
                 if (!string.IsNullOrEmpty(reason))
                 {
-                    _botNotificationsModule.SendShutdownNotifications(reason).Wait();
+                    _botNotificationsService.SendShutdownNotifications(reason).Wait();
                 }
 
-                _defaultLogger.LogInformation(eventId, "Disconnect discord client");
+                _logger.LogInformation(eventId, "Disconnect discord client");
                 _discordClient.DisconnectAsync().Wait();
             }
 
@@ -216,8 +221,6 @@ namespace VoltBot
 
                 _discordClient?.Dispose();
             }
-
-            _currentInstance = null;
 
             _isDisposed = true;
         }

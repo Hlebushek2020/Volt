@@ -1,12 +1,11 @@
 ﻿using System.IO;
-using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace VoltBot.Settings
+namespace VoltBot
 {
-    internal class Settings : IReadOnlySettings
+    internal class Settings : ISettings
     {
         private const string FileName = "settings.json";
 
@@ -22,23 +21,11 @@ namespace VoltBot.Settings
         public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
         #endregion
 
-        #region Instance
-        private static Settings _settings;
-
-        [JsonIgnore]
-        public static IReadOnlySettings Current
+        public static ISettings Load()
         {
-            get
-            {
-                if (_settings == null)
-                {
-                    string settingsFile = Path.Combine(Program.Directory, FileName);
-                    _settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
-                }
-                return _settings;
-            }
+            string settingsFile = Path.Combine(Program.Directory, FileName);
+            return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
         }
-        #endregion
 
         public static bool Availability()
         {

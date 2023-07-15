@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace VoltBot.Settings
+namespace VoltBot
 {
-    public interface IReadOnlySettings
+    public interface ISettings
     {
         string BotToken { get; }
         string BotPrefix { get; }

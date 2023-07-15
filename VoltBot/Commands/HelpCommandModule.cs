@@ -9,8 +9,11 @@ using DSharpPlus.Entities;
 
 namespace VoltBot.Commands;
 
-internal class HelpCommandModule : VoltCommandModule
+internal class HelpCommandModule : BaseCommandModule
 {
+    private readonly ISettings _settings;
+    public HelpCommandModule(ISettings settings) { _settings = settings; }
+
     [Command("help")]
     [Description(
         "Показать список команд, если для команды не указан аргумент. Если в качестве аргумента указана команда, то показывает ее полное описание.")]
@@ -45,7 +48,7 @@ internal class HelpCommandModule : VoltCommandModule
 
                 descriptionBuilder
                     .AppendLine(
-                        $"```\n{Settings.BotPrefix}{commandObj.Name} {string.Join(
+                        $"```\n{_settings.BotPrefix}{commandObj.Name} {string.Join(
                             ' ',
                             commandOverload.Arguments.Select(x => $"[{x.Name}]").ToList())}```{commandObj.Description}")
                     .AppendLine();
@@ -103,7 +106,7 @@ internal class HelpCommandModule : VoltCommandModule
 
             DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
                 .WithTitle("help")
-                .WithDescription(Settings.BotDescription)
+                .WithDescription(_settings.BotDescription)
                 .WithColor(Constants.SuccessColor)
                 .WithFooter($"v{Program.Version}");
 

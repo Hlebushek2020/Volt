@@ -8,13 +8,22 @@ using Microsoft.Extensions.Logging;
 using VoltBot.Database;
 using VoltBot.Database.Entities;
 
-namespace VoltBot.Modules
+namespace VoltBot.Services.Implementation
 {
-    internal class CheckingHistoryModule : HandlerModule<MessageCreateEventArgs>
+    internal class CheckingHistoryService : ICheckingHistoryService
     {
-        private static readonly EventId _eventId = new EventId(0, "Checking history");
+        private readonly ILogger<CheckingHistoryService> _logger;
 
-        public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
+        public CheckingHistoryService(DiscordClient discordClient, ILogger<CheckingHistoryService> logger)
+        {
+            _logger = logger;
+
+            discordClient.MessageCreated += Handler;
+
+            _logger.LogInformation($"{nameof(CheckingHistoryService)} loaded.");
+        }
+
+        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
             using VoltDbContext dbContext = new VoltDbContext();
 
@@ -23,9 +32,9 @@ namespace VoltBot.Modules
             if (guildSettings != null && guildSettings.HistoryModuleIsEnabled &&
                 guildSettings.HistoryChannelId == e.Channel.Id)
             {
-                DefaultLogger.LogInformation(
-                    _eventId,
-                    $"{e.Message.Author.Username}#{e.Message.Author.Discriminator} {e.Message.JumpLink}");
+                _logger.LogInformation(
+                    $"Guild {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
+
                 IReadOnlyList<DiscordMessage> beforeMessages = await e.Channel.GetMessagesBeforeAsync(e.Message.Id, 1);
                 DiscordMessage beforeMessage = beforeMessages.FirstOrDefault();
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
@@ -36,7 +45,7 @@ namespace VoltBot.Modules
                         await sender.GetChannelAsync(guildSettings.HistoryAdminNotificationChannelId.Value);
 
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-                        .WithTitle(_eventId.Name)
+                        .WithTitle("Checking history")
                         .WithDescription(e.Message.JumpLink.ToString())
                         .WithColor(Constants.WarningColor);
 

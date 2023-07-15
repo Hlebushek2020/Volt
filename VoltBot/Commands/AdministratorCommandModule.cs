@@ -17,8 +17,17 @@ namespace VoltBot.Commands
     /// Сommand module containing only those commands that are available to server (guild) administrators
     /// </summary>
     [RequireUserPermissions(Permissions.Administrator)]
-    internal class AdministratorCommandModule : VoltCommandModule
+    internal class AdministratorCommandModule : BaseCommandModule
     {
+        private readonly ISettings _settings;
+        private readonly ILogger<AdministratorCommandModule> _logger;
+
+        public AdministratorCommandModule(ISettings settings, ILogger<AdministratorCommandModule> logger)
+        {
+            _settings = settings;
+            _logger = logger;
+        }
+
         #region Forward Commands
         [Command("resend")]
         [Aliases("r")]
@@ -61,7 +70,7 @@ namespace VoltBot.Commands
                 .WithTitle(ctx.Member.DisplayName)
                 .WithColor(Constants.SuccessColor);
 
-            if (Settings.BugReport)
+            if (_settings.BugReport)
             {
                 EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
                 DiscordMessage discordMessage = ctx.Message;
@@ -105,7 +114,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            DefaultLogger.LogWarning(eventId, ex, string.Empty);
+                            _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                         }
                     }
 
@@ -132,8 +141,8 @@ namespace VoltBot.Commands
                         }
                     }
 
-                    DiscordGuild reportGuild = await ctx.Client.GetGuildAsync(Settings.BugReportServer);
-                    DiscordChannel reportChannel = reportGuild.GetChannel(Settings.BugReportChannel);
+                    DiscordGuild reportGuild = await ctx.Client.GetGuildAsync(_settings.BugReportServer);
+                    DiscordChannel reportChannel = reportGuild.GetChannel(_settings.BugReportChannel);
 
                     await reportChannel.SendMessageAsync(reportMessage);
 
@@ -274,9 +283,6 @@ namespace VoltBot.Commands
                 discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
                     .WithColor(Constants.SuccessColor);
             }
-            /*else if (guildSettings != null && !guildSettings.HistoryStartMessageId.HasValue) {
-                discordEmbed.WithDescription("Начальное сообщение истории не установлено!");
-            }*/
 
             await ctx.RespondAsync(discordEmbed);
         }
@@ -377,15 +383,13 @@ namespace VoltBot.Commands
         #endregion
 
         #region NOT COMMAND
-        private static async Task Forward(
+        private async Task Forward(
             CommandContext ctx,
             DiscordChannel targetChannel,
             string reason,
             bool notificationAuthor,
             bool deleteOriginal)
         {
-            EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
-
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
                 .WithColor(Constants.ErrorColor);
@@ -461,8 +465,7 @@ namespace VoltBot.Commands
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        DefaultLogger.LogDebug(
-                            eventId,
+                        _logger.LogDebug(
                             $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {
                                 discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
 
@@ -475,7 +478,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            DefaultLogger.LogWarning(eventId, ex, string.Empty);
+                            _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                         }
                     }
                 }
