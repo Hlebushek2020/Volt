@@ -72,7 +72,6 @@ namespace VoltBot.Commands
 
             if (_settings.BugReport)
             {
-                EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
                 DiscordMessage discordMessage = ctx.Message;
 
                 DiscordMessage referencedMessage = discordMessage.ReferencedMessage;

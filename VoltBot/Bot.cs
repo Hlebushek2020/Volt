@@ -34,7 +34,7 @@ namespace VoltBot
             ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(dispose: true);
             _logger = loggerFactory.CreateLogger<Bot>();
 
-            _logger.LogInformation(new EventId(0, "Init"), "Initializing discord client");
+            _logger.LogInformation("Initializing discord client");
 
             _discordClient = new DiscordClient(
                 new DiscordConfiguration
@@ -50,7 +50,7 @@ namespace VoltBot
             _services = new ServiceCollection()
                 .AddLogging(lb => lb.AddSerilog(dispose: true))
                 .AddSingleton(_discordClient)
-                .AddSingleton<ISettings>(settings)
+                .AddSingleton(settings)
                 .AddSingleton(typeof(IBot), this)
                 .AddSingleton<IForwardingMessageByUrlService, ForwardingMessageByUrlService>()
                 .AddSingleton<IForwardingPostFromVkByUrlService, ForwardingPostFromVkByUrlService>()
@@ -99,9 +99,7 @@ namespace VoltBot
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
-            _logger.LogInformation(
-                new EventId(0, $"Command: {e.Command.Name}"),
-                "Command completed successfully");
+            _logger.LogInformation($"{e.Command.Name} command completed successfully");
             return Task.CompletedTask;
         }
 
@@ -120,32 +118,29 @@ namespace VoltBot
             {
                 embed.WithDescription(
                     $"В команде `{e.Command.Name}` ошибка один или несколько параметров введены неверно");
-                _logger.LogWarning(new EventId(0, $"Command: {e.Command.Name}"), exception, string.Empty);
+                _logger.LogWarning(
+                    $"Error when executing the {e.Command.Name} command. Type: ArgumentException. Message: {
+                        exception.Message}");
             }
             else if (exception is CommandNotFoundException commandNotFoundEx)
             {
                 embed.WithDescription($"Неизвестная команда `{commandNotFoundEx.CommandName}`");
                 _logger.LogWarning(
-                    new EventId(0, $"Command: {commandNotFoundEx.CommandName}"),
-                    exception,
-                    string.Empty);
+                    $"Error when executing the {commandNotFoundEx.CommandName
+                    } command. Type: CommandNotFoundException. Message: {exception.Message}");
             }
             else if (exception is ChecksFailedException checksFailedEx)
             {
                 embed.WithDescription($"У вас нет доступа к команде `{checksFailedEx.Command.Name}`");
                 _logger.LogWarning(
-                    new EventId(0, $"Command: {checksFailedEx.Command.Name}"),
-                    exception,
-                    string.Empty);
+                    $"Error when executing the {checksFailedEx.Command.Name
+                    } command. Type: CommandNotFoundException. Message: {exception.Message}");
             }
             else
             {
                 embed.WithDescription(
                     "При выполнении команды произошла неизвестная ошибка, обратитесь к администраторам сервера (гильдии)");
-                _logger.LogError(
-                    new EventId(0, $"Command: {e.Command?.Name ?? "Unknown"}"),
-                    exception,
-                    string.Empty);
+                _logger.LogError($"Error when executing the: {e.Command?.Name ?? "Unknown"}", exception);
             }
 
             await context.RespondAsync(embed);
@@ -153,7 +148,7 @@ namespace VoltBot
 
         public async Task RunAsync()
         {
-            _logger.LogInformation(new EventId(0, "Run"), "Discord client connect");
+            _logger.LogInformation("Discord client connect");
 
             await _discordClient.ConnectAsync();
             StartDateTime = DateTime.Now;
@@ -169,8 +164,7 @@ namespace VoltBot
 
         public void Shutdown(string reason = null)
         {
-            EventId eventId = new EventId(0, "Shutdown");
-            _logger.LogInformation(eventId, "Shutdown");
+            _logger.LogInformation("Shutdown");
 
             if (_discordClient != null)
             {
@@ -179,7 +173,7 @@ namespace VoltBot
                     _botNotificationsService.SendShutdownNotifications(reason).Wait();
                 }
 
-                _logger.LogInformation(eventId, "Disconnect discord client");
+                _logger.LogInformation("Disconnect discord client");
                 _discordClient.DisconnectAsync().Wait();
             }
 
