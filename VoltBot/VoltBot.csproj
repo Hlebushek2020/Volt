@@ -8,7 +8,7 @@
         <Copyright>Sergey Govorunov</Copyright>
         <AssemblyVersion>2.0.0.0</AssemblyVersion>
         <FileVersion>2.0.0.0</FileVersion>
-        <InformationalVersion>2.0.0-alpha-r11</InformationalVersion>
+        <InformationalVersion>2.0.0-alpha-r12</InformationalVersion>
         <AssemblyName>Volt_Bot</AssemblyName>
     </PropertyGroup>
 
