@@ -2,6 +2,9 @@
 
 namespace VoltBot
 {
+    /// <summary>
+    /// Provides read-only bot configuration
+    /// </summary>
     public interface ISettings
     {
         string BotToken { get; }

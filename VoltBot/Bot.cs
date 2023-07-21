@@ -60,6 +60,7 @@ namespace VoltBot
                 .AddSingleton<IBotNotificationsService, BotNotificationsService>()
                 .BuildServiceProvider();
 
+            // Initializing services that won't be called anywhere
             _services.GetService<IForwardingMessageByUrlService>();
             _services.GetService<IForwardingPostFromVkByUrlService>();
             _services.GetService<IBotPingService>();
@@ -89,13 +90,6 @@ namespace VoltBot
         private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
             await sender.UpdateStatusAsync(
                 new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
-
-        /*private Task DiscordClient_SocketErrored(DiscordClient sender, SocketErrorEventArgs e)
-        {
-            _defaultLogger.LogCritical(new EventId(0, "Discord Client: Socket Errored"), e.Exception, string.Empty);
-            Shutdown();
-            return Task.CompletedTask;
-        }*/
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
@@ -179,21 +173,6 @@ namespace VoltBot
 
             _isRunning = false;
         }
-
-        /*private async Task Restart()
-        {
-            EventId eventId = new EventId(0, "Restart");
-            _defaultLogger.LogInformation(eventId, "Restart");
-
-            _defaultLogger.LogInformation(eventId, "Disconnect discord client");
-            await _discordClient.DisconnectAsync();
-
-            _defaultLogger.LogInformation(eventId, "Reconnect after 2 seconds");
-            await Task.Delay(2000);
-
-            _defaultLogger.LogInformation(eventId, "Discord client connect");
-            await _discordClient.ConnectAsync();
-        }*/
 
         public void Dispose()
         {

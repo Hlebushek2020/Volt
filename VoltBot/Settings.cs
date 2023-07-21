@@ -11,21 +11,37 @@ namespace VoltBot
 
         #region Property
         public string BotToken { get; set; }
-        public string BotPrefix { get; set; } = "volt!";
-        public string BotDescription { get; set; } = string.Empty;
-        public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
+        public string BotPrefix { get; set; }
+        public string BotDescription { get; set; }
+        public LogLevel BotLogLevel { get; set; }
         public string VkSecret { get; set; }
         public bool BugReport { get; set; } = false;
         public ulong BugReportChannel { get; set; }
         public ulong BugReportServer { get; set; }
         #endregion
 
+        private Settings()
+        {
+            BotPrefix = "volt!";
+            BotDescription = $"Список доступных команд. `{BotPrefix}help [команда]` для полной информации.";
+            BotLogLevel = LogLevel.Information;
+            BugReport = false;
+        }
+
+        /// <summary>
+        /// Loads settings from configuration file
+        /// </summary>
+        /// <returns>Read only settings</returns>
         public static ISettings Load()
         {
             string settingsFile = Path.Combine(Program.Directory, FileName);
             return JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingsFile, Encoding.UTF8));
         }
 
+        /// <summary>
+        /// Checks for the existence of a configuration file. If the configuration file does not exist, it will be created.
+        /// </summary>
+        /// <returns><see langword="true"/> if the configuration file exists</returns>
         public static bool Availability()
         {
             string settingsPath = Path.Combine(Program.Directory, FileName);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -32,7 +34,7 @@ namespace VoltBot
             }
         }
 
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             if (!Settings.Availability())
             {
@@ -62,21 +64,21 @@ namespace VoltBot
 
             Log.Logger = loggerConfiguration.CreateLogger();
 
-            //bool isShutdown = false;
-            //while (!isShutdown)
-            //{
-            try
+            bool isShutdown = false;
+            while (!isShutdown)
             {
-                using Bot volt = new Bot(settings);
-                volt.RunAsync().GetAwaiter().GetResult();
-                //isShutdown = true;
+                try
+                {
+                    using Bot volt = new Bot(settings);
+                    await volt.RunAsync();
+                    isShutdown = true;
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.ForContext<Program>().Fatal(ex, "Bot failed. Bot restart after 2 minutes.");
+                    Thread.Sleep(120000);
+                }
             }
-            catch (Exception ex)
-            {
-                Log.Logger.ForContext<Program>().Fatal(ex, "Bot failed.");
-                return 1;
-            }
-            //}
 
             return 0;
         }
