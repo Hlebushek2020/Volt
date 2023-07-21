@@ -11,14 +11,13 @@ namespace VoltBot
 
         #region Property
         public string BotToken { get; set; }
-        public string BotPrefix { get; set; } = "volt>";
+        public string BotPrefix { get; set; } = "volt!";
         public string BotDescription { get; set; } = string.Empty;
+        public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
         public string VkSecret { get; set; }
         public bool BugReport { get; set; } = false;
         public ulong BugReportChannel { get; set; }
         public ulong BugReportServer { get; set; }
-        public LogLevel DiscordApiLogLevel { get; set; } = LogLevel.Information;
-        public LogLevel BotLogLevel { get; set; } = LogLevel.Information;
         #endregion
 
         public static ISettings Load()
