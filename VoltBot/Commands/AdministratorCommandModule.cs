@@ -31,7 +31,7 @@ namespace VoltBot.Commands
         #region Forward Commands
         [Command("resend")]
         [Aliases("r")]
-        [Description("Переслать сообщение в другой канал")]
+        [Description("Переслать сообщение в другой канал.")]
         public async Task Forward(
             CommandContext ctx,
             [Description("Канал, куда необходимо переслать сообщение")]
@@ -45,7 +45,7 @@ namespace VoltBot.Commands
         [Command("resend-delete")]
         [Aliases("rd")]
         [Description(
-            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
+            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения.")]
         public async Task ForwardAndDeleteOriginal(
             CommandContext ctx,
             [Description("Канал, куда необходимо переслать сообщение")]
@@ -160,7 +160,7 @@ namespace VoltBot.Commands
         #region Notifications command
         [Command("notification-channel")]
         [Aliases("notif-channel")]
-        [Description("Задать канал для отправки системных уведомлений")]
+        [Description("Задать канал для отправки системных уведомлений.")]
         public async Task SetNotificationChannel(
             CommandContext ctx,
             [Description("Канал")]
@@ -190,7 +190,7 @@ namespace VoltBot.Commands
 
         [Command("on-notification")]
         [Aliases("on-notif")]
-        [Description("Включить / Отключить уведомление о включении бота")]
+        [Description("Включить / Отключить уведомление о включении бота.")]
         public async Task ReadyNotification(
             CommandContext ctx,
             [Description("true - включить / false - выключить")]
@@ -222,7 +222,7 @@ namespace VoltBot.Commands
 
         [Command("off-notification")]
         [Aliases("off-notif")]
-        [Description("Включить / Отключить уведомление о выключении бота")]
+        [Description("Включить / Отключить уведомление о выключении бота.")]
         public async Task ShutdownNotification(
             CommandContext ctx,
             [Description("true - включить / false - выключить")]
@@ -256,7 +256,7 @@ namespace VoltBot.Commands
         #region History
         [Command("checking-history")]
         [Aliases("ch-hist")]
-        [Description("Включить / Отключить управление историями")]
+        [Description("Включить / Отключить управление историями.")]
         public async Task CheckingHistory(
             CommandContext ctx,
             [Description("true - включить / false - выключить")]
@@ -287,8 +287,8 @@ namespace VoltBot.Commands
         }
 
         [Command("checking-history-settings")]
-        [Aliases("ch-hist-settings", "hist-settings", "checking-settings")]
-        [Description("Задать настройки для управления историями")]
+        [Aliases("hist-settings")]
+        [Description("Задать настройки для управления историями.")]
         public async Task CheckingHistorySettings(
             CommandContext ctx,
             [Description("Канал историй")]
@@ -329,56 +329,6 @@ namespace VoltBot.Commands
 
             await ctx.RespondAsync(discordEmbed);
         }
-
-        /*
-        [Command("new-history")]
-        [Aliases("new-hist")]
-        [Description("Установить начальное сообщение истории. Если данная команда не является ответом на сообщение, то началом истории будет установлено последнее сообщение в соответствующем канале. В противном случае началом будет установлено то сообщение на которое данная команда является ответом.")]
-        public async Task NewHistory(CommandContext ctx)
-        {
-            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
-               .WithTitle(ctx.Member.DisplayName)
-               .WithDescription("Канал историй не установлен!")
-               .WithColor(Constants.ErrorColor);
-
-            VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
-
-            if (guildSettings != null && guildSettings.HistoryChannelId.HasValue)
-            {
-                DiscordMessage startMessage = null;
-                if (ctx.Message.ReferencedMessage != null)
-                {
-                    if (ctx.Message.ReferencedMessage.ChannelId != guildSettings.HistoryChannelId)
-                    {
-                        discordEmbed.WithDescription("Задаваемое начальное сообщение не из канала историй!");
-                    }
-                    else
-                    {
-                        startMessage = ctx.Message.ReferencedMessage;
-                    }
-                }
-                else
-                {
-                    DiscordChannel discordChannel = await ctx.Client.GetChannelAsync(guildSettings.HistoryChannelId.Value);
-                    startMessage = (await discordChannel.GetMessagesAsync(1)).First();
-                }
-
-                if (startMessage != null)
-                {
-                    discordEmbed.WithDescription("Начальное сообщение истории установлено!")
-                  .WithColor(Constants.ErrorColor);
-
-                    guildSettings.HistoryStartMessageId = startMessage.Id;
-
-                    dbContext.SaveChanges();
-                }
-            }
-
-            await ctx.RespondAsync(discordEmbed);
-        }
-        */
         #endregion
 
         #region NOT COMMAND

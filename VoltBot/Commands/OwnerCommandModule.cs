@@ -20,7 +20,7 @@ namespace VoltBot.Commands
 
         [Command("shutdown")]
         [Aliases("sd")]
-        [Description("Выключить бота")]
+        [Description("Выключить бота.")]
         public async Task Shutdown(
             CommandContext ctx,
             [Description("Причина выключения бота"), RemainingText]
@@ -31,7 +31,7 @@ namespace VoltBot.Commands
         }
 
         [Command("status")]
-        [Description("Сведения о боте")]
+        [Description("Сведения о боте.")]
         public async Task Status(CommandContext ctx)
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
