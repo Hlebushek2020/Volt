@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -12,6 +13,9 @@ namespace VoltBot.Services.Implementation
 {
     internal class CheckingHistoryService : ICheckingHistoryService
     {
+        private const char AddTwoWords = '4';
+        private const char TwoMessagesInRow = '5';
+
         private readonly ILogger<CheckingHistoryService> _logger;
 
         public CheckingHistoryService(DiscordClient discordClient, ILogger<CheckingHistoryService> logger)
@@ -29,17 +33,28 @@ namespace VoltBot.Services.Implementation
 
             GuildSettings guildSettings = await dbContext.GuildSettings.FindAsync(e.Guild.Id);
 
-            if (guildSettings != null && guildSettings.HistoryModuleIsEnabled &&
-                guildSettings.HistoryChannelId == e.Channel.Id)
+            if (guildSettings is { HistoryModuleIsEnabled: true } &&
+                e.Channel.Id == guildSettings.HistoryChannelId)
             {
                 _logger.LogInformation(
                     $"Guild {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
 
                 IReadOnlyList<DiscordMessage> beforeMessages = await e.Channel.GetMessagesBeforeAsync(e.Message.Id, 1);
-                DiscordMessage beforeMessage = beforeMessages.FirstOrDefault();
+                DiscordMessage beforeMessage = beforeMessages.First();
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
                 string[] currentParts = e.Message.Content.Replace("  ", " ").Split(' ');
+                StringBuilder breakingRule = new StringBuilder();
                 if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount)
+                {
+                    breakingRule.Append(AddTwoWords);
+                }
+                if (e.Message.Author.Id == beforeMessage.Author.Id)
+                {
+                    if (breakingRule.Length > 0)
+                        breakingRule.Append(", ");
+                    breakingRule.Append(TwoMessagesInRow);
+                }
+                if (breakingRule != null)
                 {
                     DiscordChannel discordChannel =
                         await sender.GetChannelAsync(guildSettings.HistoryAdminNotificationChannelId.Value);
@@ -47,6 +62,7 @@ namespace VoltBot.Services.Implementation
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                         .WithTitle("Checking history")
                         .WithDescription(e.Message.JumpLink.ToString())
+                        .AddField("Cases", breakingRule.ToString())
                         .WithColor(Constants.WarningColor);
 
                     RoleMention roleMention = new RoleMention(guildSettings.HistoryAdminPingRole.Value);
