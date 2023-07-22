@@ -1,10 +1,10 @@
-﻿using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 
 namespace VoltBot.Commands
 {
@@ -12,35 +12,41 @@ namespace VoltBot.Commands
     /// Command module containing only those commands that are available to the bot owner
     /// </summary>
     [RequireOwner]
-    internal class OwnerCommandModule : VoltCommandModule
+    internal class OwnerCommandModule : BaseCommandModule
     {
+        private readonly IBot _bot;
+
+        public OwnerCommandModule(IBot bot) { _bot = bot; }
+
         [Command("shutdown")]
         [Aliases("sd")]
-        [Description("Выключить бота")]
-        public async Task Shutdown(CommandContext ctx)
+        [Description("Выключить бота.")]
+        public async Task Shutdown(
+            CommandContext ctx,
+            [Description("Причина выключения бота"), RemainingText]
+            string reason)
         {
             await ctx.RespondAsync("Ok");
-            Bot.Current.Shutdown();
+            _bot.Shutdown(reason);
         }
 
         [Command("status")]
-        [Description("Сведения о боте")]
+        [Description("Сведения о боте.")]
         public async Task Status(CommandContext ctx)
         {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithColor(Constants.StatusColor)
                 .AddField("Net", $"v{Environment.Version}")
                 .AddField("DSharpPlus", $"v{ctx.Client.VersionString}")
-                .AddField("Сборка",
-                    $"v{version.Major}.{version.Minor}.{version.Build} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
-                .AddField("Дата запуска",
-                    $"{Bot.Current.StartDateTime:dd.MM.yyyy} {Bot.Current.StartDateTime:HH:mm:ss zzz}");
+                .AddField(
+                    "Сборка",
+                    $"v{Program.Version} {File.GetCreationTime(Assembly.GetExecutingAssembly().Location):dd.MM.yyyy}")
+                .AddField("Дата запуска", $"{_bot.StartDateTime:dd.MM.yyyy} {_bot.StartDateTime:HH:mm:ss zzz}");
 
-            TimeSpan timeSpan = DateTime.Now - Bot.Current.StartDateTime;
+            TimeSpan timeSpan = DateTime.Now - _bot.StartDateTime;
 
-            discordEmbed.AddField("Время работы",
+            discordEmbed.AddField(
+                "Время работы",
                 $"{timeSpan.Days}d, {timeSpan.Hours}h, {timeSpan.Minutes}m, {timeSpan.Seconds}s");
 
             await ctx.RespondAsync(discordEmbed);

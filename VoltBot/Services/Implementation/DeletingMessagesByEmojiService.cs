@@ -1,28 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
-using VoltBot.Modules;
 
-namespace VoltBot.Services
+namespace VoltBot.Services.Implementation
 {
-    internal class DeletingMessagesByEmojiModule : HandlerModule<MessageReactionAddEventArgs>
+    internal class DeletingMessagesByEmojiService : IDeletingMessagesByEmojiService
     {
-        private readonly EventId _eventId = new EventId(0, "Deleting Messages By Emoji");
+        private readonly ILogger<DeletingMessagesByEmojiService> _logger;
 
-        public override async Task Handler(DiscordClient sender, MessageReactionAddEventArgs e)
+        public DeletingMessagesByEmojiService(
+            DiscordClient discordClient,
+            ILogger<DeletingMessagesByEmojiService> logger)
+        {
+            _logger = logger;
+
+            discordClient.MessageReactionAdded += Handler;
+
+            _logger.LogInformation($"{nameof(DeletingMessagesByEmojiService)} loaded.");
+        }
+
+        public async Task Handler(DiscordClient sender, MessageReactionAddEventArgs e)
         {
             DiscordEmoji emoji = DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji, false);
 
             if (e.Emoji.Equals(emoji) && !e.User.Id.Equals(sender.CurrentUser.Id))
             {
-                _defaultLogger.LogInformation(_eventId,
-                    $"{e.User.Username}#{e.User.Discriminator}{(e.Guild != null ? $", {e.Guild.Name}, {e.Channel.Name}" : $"")}, {e.Message.Id}");
+                _logger.LogInformation(
+                    e.Guild != null
+                        ? $"Guild: {e.Guild.Name} ({e.Guild.Id}). Channel: {e.Channel.Name} ({e.Channel.Id})."
+                        : $"Username: {e.User.Username}");
                 if (e.Guild != null)
                 {
                     DiscordMessage currentMessage = await e.Channel.GetMessageAsync(e.Message.Id);
@@ -39,7 +48,6 @@ namespace VoltBot.Services
                             if (message.Author.Id.Equals(sender.CurrentUser.Id))
                             {
                                 await message.DeleteAsync();
-                                e.Handled = true;
                             }
                             else
                             {
@@ -51,7 +59,6 @@ namespace VoltBot.Services
                 else
                 {
                     await e.Message.DeleteAsync();
-                    e.Handled = true;
                 }
             }
         }

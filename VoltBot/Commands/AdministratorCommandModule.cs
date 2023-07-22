@@ -1,12 +1,15 @@
-﻿using DSharpPlus;
+﻿using System;
+using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
+using VoltBot.Database;
+using VoltBot.Database.Entities;
 
 namespace VoltBot.Commands
 {
@@ -14,12 +17,23 @@ namespace VoltBot.Commands
     /// Сommand module containing only those commands that are available to server (guild) administrators
     /// </summary>
     [RequireUserPermissions(Permissions.Administrator)]
-    internal class AdministratorCommandModule : VoltCommandModule
+    internal class AdministratorCommandModule : BaseCommandModule
     {
+        private readonly ISettings _settings;
+        private readonly ILogger<AdministratorCommandModule> _logger;
+
+        public AdministratorCommandModule(ISettings settings, ILogger<AdministratorCommandModule> logger)
+        {
+            _settings = settings;
+            _logger = logger;
+        }
+
+        #region Forward Commands
         [Command("resend")]
         [Aliases("r")]
-        [Description("Переслать сообщение в другой канал")]
-        public async Task Forward(CommandContext ctx,
+        [Description("Переслать сообщение в другой канал.")]
+        public async Task Forward(
+            CommandContext ctx,
             [Description("Канал, куда необходимо переслать сообщение")]
             DiscordChannel targetChannel,
             [Description("Причина (необязательно)"), RemainingText]
@@ -31,8 +45,9 @@ namespace VoltBot.Commands
         [Command("resend-delete")]
         [Aliases("rd")]
         [Description(
-            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения")]
-        public async Task ForwardAndDeleteOriginal(CommandContext ctx,
+            "Переслать сообщение в другой канал и удалить его с предыдущего уведомив об этом автора сообщения.")]
+        public async Task ForwardAndDeleteOriginal(
+            CommandContext ctx,
             [Description("Канал, куда необходимо переслать сообщение")]
             DiscordChannel targetChannel,
             [Description("Причина (необязательно)"), RemainingText]
@@ -40,11 +55,14 @@ namespace VoltBot.Commands
         {
             await Forward(ctx, targetChannel, reason, true, true);
         }
+        #endregion
 
+        #region Command: bug-report
         [Command("bug-report")]
         [Description(
             "Сообщить об ошибке. Убедительная просьба прикладывать как можно больше информации об ошибке (действия которые к ней привели, скриншоты и т.д.) к сообщению с данной командой.")]
-        public async Task BugReport(CommandContext ctx,
+        public async Task BugReport(
+            CommandContext ctx,
             [Description("Описание ошибки (необязательно)"), RemainingText]
             string description)
         {
@@ -54,7 +72,6 @@ namespace VoltBot.Commands
 
             if (_settings.BugReport)
             {
-                EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
                 DiscordMessage discordMessage = ctx.Message;
 
                 DiscordMessage referencedMessage = discordMessage.ReferencedMessage;
@@ -73,15 +90,18 @@ namespace VoltBot.Commands
                         .WithTitle("Bug-Report")
                         .AddField("Author", ctx.User.Username + "#" + ctx.User.Discriminator)
                         .AddField("Guild", ctx.Guild.Name)
-                        .AddField("Date",
+                        .AddField(
+                            "Date",
                             discordMessage.CreationTimestamp.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss"));
 
-                    if (!string.IsNullOrEmpty(description))
+                    DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
+
+                    bool hasDescription = !string.IsNullOrEmpty(description);
+                    if (hasDescription)
                     {
-                        reportEmbed.AddField("Description", description);
+                        reportMessage.WithContent($"**Description:** {description}");
                     }
 
-                    DiscordMessageBuilder reportMessage = new DiscordMessageBuilder().WithEmbed(reportEmbed);
                     foreach (DiscordAttachment attachment in discordMessage.Attachments)
                     {
                         try
@@ -93,7 +113,7 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, "");
+                            _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                         }
                     }
 
@@ -101,7 +121,17 @@ namespace VoltBot.Commands
                     {
                         if (!string.IsNullOrEmpty(referencedMessage.Content))
                         {
-                            reportEmbed.AddField("Reference Message", referencedMessage.Content);
+                            string referencedMessageContent = referencedMessage.Content;
+                            if (hasDescription)
+                            {
+                                if (referencedMessageContent.Length > 1024)
+                                    referencedMessageContent = referencedMessageContent[..1024];
+                                reportEmbed.AddField("Reference Message", referencedMessageContent);
+                            }
+                            else
+                            {
+                                reportMessage.WithContent($"**Reference Message:** {referencedMessageContent}");
+                            }
                         }
 
                         if (referencedMessage.Embeds != null)
@@ -125,13 +155,190 @@ namespace VoltBot.Commands
 
             await ctx.RespondAsync(discordEmbed);
         }
+        #endregion
+
+        #region Notifications command
+        [Command("notification-channel")]
+        [Aliases("notif-channel")]
+        [Description("Задать канал для отправки системных уведомлений.")]
+        public async Task SetNotificationChannel(
+            CommandContext ctx,
+            [Description("Канал")]
+            DiscordChannel target)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал установлен!")
+                .WithColor(Constants.SuccessColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings == null)
+            {
+                guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
+                dbContext.GuildSettings.Add(guildSettings);
+            }
+
+            guildSettings.NotificationChannelId = target.Id;
+
+            dbContext.SaveChanges();
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("on-notification")]
+        [Aliases("on-notif")]
+        [Description("Включить / Отключить уведомление о включении бота.")]
+        public async Task ReadyNotification(
+            CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал для отправки системных уведомлений не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings?.NotificationChannelId != null)
+            {
+                if (guildSettings.IsReadyNotification != isEnabled)
+                {
+                    guildSettings.IsReadyNotification = isEnabled;
+                    await dbContext.SaveChangesAsync();
+                }
+
+                discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("off-notification")]
+        [Aliases("off-notif")]
+        [Description("Включить / Отключить уведомление о выключении бота.")]
+        public async Task ShutdownNotification(
+            CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал для отправки системных уведомлений не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings?.NotificationChannelId != null)
+            {
+                if (guildSettings.IsShutdownNotification != isEnabled)
+                {
+                    guildSettings.IsShutdownNotification = isEnabled;
+                    await dbContext.SaveChangesAsync();
+                }
+
+                discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+        #endregion
+
+        #region History
+        [Command("checking-history")]
+        [Aliases("ch-hist")]
+        [Description("Включить / Отключить управление историями.")]
+        public async Task CheckingHistory(
+            CommandContext ctx,
+            [Description("true - включить / false - выключить")]
+            bool isEnabled)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал историй не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings?.HistoryChannelId != null)
+            {
+                if (guildSettings.HistoryModuleIsEnabled != isEnabled)
+                {
+                    guildSettings.HistoryModuleIsEnabled = isEnabled;
+                    await dbContext.SaveChangesAsync();
+                }
+
+                discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
+                    .WithColor(Constants.SuccessColor);
+            }
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("checking-history-settings")]
+        [Aliases("hist-settings")]
+        [Description("Задать настройки для управления историями.")]
+        public async Task CheckingHistorySettings(
+            CommandContext ctx,
+            [Description("Канал историй")]
+            DiscordChannel historyChannel,
+            [Description("Количество допустимых слов для добавления за сообщение (Допустимые значения: 1 - 255)")]
+            byte wordCount,
+            [Description("Канал для уведомлений о некорректном сообщении")]
+            DiscordChannel adminNotificationChannel,
+            [Description("Пингуемая роль при некорректном сообщении")]
+            DiscordRole adminPingRole)
+        {
+            if (wordCount == 0)
+            {
+                throw new ArgumentException();
+            }
+
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Настройки установлены!")
+                .WithColor(Constants.SuccessColor);
+
+            using VoltDbContext dbContext = new VoltDbContext();
+
+            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+
+            if (guildSettings == null)
+            {
+                guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
+                dbContext.GuildSettings.Add(guildSettings);
+            }
+
+            guildSettings.HistoryChannelId = historyChannel.Id;
+            guildSettings.HistoryWordCount = wordCount;
+            guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel.Id;
+            guildSettings.HistoryAdminPingRole = adminPingRole.Id;
+
+            dbContext.SaveChanges();
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+        #endregion
 
         #region NOT COMMAND
-        private static async Task Forward(CommandContext ctx, DiscordChannel targetChannel,
-            string reason, bool notificationAuthor, bool deleteOriginal)
+        private async Task Forward(
+            CommandContext ctx,
+            DiscordChannel targetChannel,
+            string reason,
+            bool notificationAuthor,
+            bool deleteOriginal)
         {
-            EventId eventId = new EventId(0, $"Command: {ctx.Command.Name}");
-
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
                 .WithColor(Constants.ErrorColor);
@@ -152,9 +359,9 @@ namespace VoltBot.Commands
 
                 discordEmbed.WithColor(Constants.SuccessColor)
                     .WithFooter(
-                        $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {forwardMessage.CreationTimestamp}")
-                    .WithDescription(forwardMessage.Content)
-                    .WithTitle(null);
+                        $"Guild: {forwardMessage.Channel.Guild.Name}, Channel: {forwardMessage.Channel.Name}, Time: {
+                            forwardMessage.CreationTimestamp}")
+                    .WithDescription(forwardMessage.Content);
 
                 if (!string.IsNullOrEmpty(reason))
                 {
@@ -174,20 +381,42 @@ namespace VoltBot.Commands
                 }
 
                 DiscordMessageBuilder newMessageBuilder = new DiscordMessageBuilder();
+                DiscordMessageBuilder newMessageLinksBuilder = null;
 
                 newMessageBuilder.AddEmbed(discordEmbed);
 
                 if (forwardMessage.Embeds?.Count > 0)
                 {
-                    newMessageBuilder.AddEmbeds(forwardMessage.Embeds);
+                    StringBuilder attacmentsLinks = new StringBuilder();
+                    foreach (DiscordEmbed forwardMessageEmbed in forwardMessage.Embeds)
+                    {
+                        if (forwardMessageEmbed.Url != null &&
+                            forwardMessageEmbed.Url.AbsoluteUri.StartsWith("https://cdn.discordapp.com/attachments"))
+                        {
+                            if (attacmentsLinks.Length > 0)
+                                attacmentsLinks.AppendLine();
+                            attacmentsLinks.Append(forwardMessageEmbed.Url.AbsoluteUri);
+                        }
+                        else
+                        {
+                            newMessageBuilder.AddEmbed(forwardMessageEmbed);
+                        }
+                    }
+
+                    if (attacmentsLinks.Length > 0)
+                    {
+                        newMessageLinksBuilder = new DiscordMessageBuilder()
+                            .WithContent(attacmentsLinks.ToString());
+                    }
                 }
 
                 if (forwardMessage.Attachments?.Count > 0)
                 {
                     foreach (DiscordAttachment discordAttachment in forwardMessage.Attachments)
                     {
-                        _defaultLogger.LogDebug(eventId,
-                            $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
+                        _logger.LogDebug(
+                            $"[Attachment] Media type: {discordAttachment.MediaType ?? "none"}, File name: {
+                                discordAttachment.FileName ?? "none"}, Url: {discordAttachment.Url ?? "none"}");
 
                         try
                         {
@@ -198,12 +427,16 @@ namespace VoltBot.Commands
                         }
                         catch (Exception ex)
                         {
-                            _defaultLogger.LogWarning(eventId, ex, "");
+                            _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                         }
                     }
                 }
 
                 DiscordMessage newMessage = await targetChannel.SendMessageAsync(newMessageBuilder);
+                if (newMessageLinksBuilder != null)
+                {
+                    await newMessage.RespondAsync(newMessageLinksBuilder);
+                }
 
                 await ctx.Message.DeleteAsync();
                 if (deleteOriginal)
@@ -222,7 +455,9 @@ namespace VoltBot.Commands
                             .WithColor(Constants.WarningColor)
                             .WithTitle("Пересылка сообщения")
                             .WithDescription(
-                                $"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {forwardMessage.Channel.Name} в канал {targetChannel.Name}. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
+                                $"Администратор сервера {ctx.Guild.Name} переслал ваше сообщение из канала {
+                                    forwardMessage.Channel.Name} в канал {targetChannel.Name
+                                    }. Ссылка на пересланное сообщение: {newMessage.JumpLink}");
 
                         DiscordMessage discordDmMessage = await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
 

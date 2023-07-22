@@ -1,26 +1,34 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using VoltBot.Logs;
-using VoltBot.Logs.Providers;
-using VoltBot.Modules;
+using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Logging;
 
-namespace VoltBot.Services
+namespace VoltBot.Services.Implementation
 {
-    internal class ForwardingMessageByUrlModule : HandlerModule<MessageCreateEventArgs>
+    internal class ForwardingMessageByUrlService : IForwardingMessageByUrlService
     {
-        private readonly EventId _eventId = new EventId(0, "Forwarding Message By Url");
-        private readonly Regex _messagePattern =
-            new Regex(@"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
+        private static readonly Regex _messagePattern =
+            new Regex(
+                @"(?<!\\)https?:\/\/(?:ptb\.|canary\.)?discord\.com\/channels\/(\d+)\/(\d+)\/(\d+)",
                 RegexOptions.Compiled);
 
-        private Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
+        private readonly ILogger<ForwardingMessageByUrlService> _logger;
+
+        public ForwardingMessageByUrlService(DiscordClient discordClient, ILogger<ForwardingMessageByUrlService> logger)
+        {
+            _logger = logger;
+
+            discordClient.MessageCreated += Handler;
+
+            _logger.LogInformation($"{nameof(ForwardingMessageByUrlService)} loaded.");
+        }
+
+        private static Tuple<ulong, ulong, ulong> GetMessageLocation(string messageText)
         {
             Match match = _messagePattern.Match(messageText);
 
@@ -37,13 +45,14 @@ namespace VoltBot.Services
             return null;
         }
 
-        public override async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
+        public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
             Tuple<ulong, ulong, ulong> resendMessageLocation = GetMessageLocation(e.Message.Content);
 
             if (resendMessageLocation != null)
             {
-                _defaultLogger.LogInformation(_eventId, $"{e.Guild.Name}, {e.Channel.Name}, {e.Message.Id}");
+                _logger.LogInformation(
+                    $"Guild: {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
 
                 DiscordChannel discordChannel = await sender.GetChannelAsync(resendMessageLocation.Item2);
                 DiscordMessage resendMessage = await discordChannel.GetMessageAsync(resendMessageLocation.Item3);
@@ -51,7 +60,8 @@ namespace VoltBot.Services
                 DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                     .WithColor(Constants.SuccessColor)
                     .WithFooter(
-                        $"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {resendMessage.CreationTimestamp}")
+                        $"Guild: {resendMessage.Channel.Guild.Name}, Channel: {resendMessage.Channel.Name}, Time: {
+                            resendMessage.CreationTimestamp}")
                     .WithDescription(resendMessage.Content);
 
                 if (resendMessage.Author != null)
@@ -75,7 +85,8 @@ namespace VoltBot.Services
                     foreach (DiscordAttachment discordAttachment in resendMessage.Attachments)
                     {
                         if (discordAttachment.MediaType != null &&
-                            discordAttachment.MediaType.StartsWith("image",
+                            discordAttachment.MediaType.StartsWith(
+                                "image",
                                 StringComparison.InvariantCultureIgnoreCase))
                         {
                             DiscordEmbedBuilder attacmentEmbed = new DiscordEmbedBuilder()
@@ -94,7 +105,7 @@ namespace VoltBot.Services
                             }
                             catch (Exception ex)
                             {
-                                _defaultLogger.LogWarning(_eventId, ex, "");
+                                _logger.LogWarning($"Failed to download attachment. Message: {ex.Message}.");
                             }
                         }
                     }
@@ -102,8 +113,11 @@ namespace VoltBot.Services
 
                 DiscordMessage newMessage = await e.Message.RespondAsync(newMessageBuilder);
 
-                await newMessage.CreateReactionAsync(DiscordEmoji.FromName(sender, Constants.DeleteMessageEmoji,
-                    false));
+                await newMessage.CreateReactionAsync(
+                    DiscordEmoji.FromName(
+                        sender,
+                        Constants.DeleteMessageEmoji,
+                        false));
             }
         }
     }
