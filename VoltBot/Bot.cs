@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using VoltBot.Commands;
+using VoltBot.Database;
 using VoltBot.Services;
 using VoltBot.Services.Implementation;
 
@@ -57,6 +58,7 @@ namespace VoltBot
                 .AddSingleton(_discordClient)
                 .AddSingleton(settings)
                 .AddSingleton(typeof(IBot), this)
+                .AddDbContext<VoltDbContext>()
                 .AddSingleton<IForwardingMessageByUrlService, ForwardingMessageByUrlService>()
                 .AddSingleton<IForwardingPostFromVkByUrlService, ForwardingPostFromVkByUrlService>()
                 .AddSingleton<IBotPingService, BotPingService>()
@@ -200,9 +202,7 @@ namespace VoltBot
         private void Dispose(bool disposing)
         {
             if (_isDisposed)
-            {
                 return;
-            }
 
             if (disposing)
             {

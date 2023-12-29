@@ -20,10 +20,15 @@ namespace VoltBot.Commands
     internal class AdministratorCommandModule : BaseCommandModule
     {
         private readonly ISettings _settings;
+        private readonly VoltDbContext _dbContext;
         private readonly ILogger<AdministratorCommandModule> _logger;
 
-        public AdministratorCommandModule(ISettings settings, ILogger<AdministratorCommandModule> logger)
+        public AdministratorCommandModule(
+            VoltDbContext dbContext,
+            ISettings settings,
+            ILogger<AdministratorCommandModule> logger)
         {
+            _dbContext = dbContext;
             _settings = settings;
             _logger = logger;
         }
@@ -163,27 +168,24 @@ namespace VoltBot.Commands
         [Description("Задать канал для отправки системных уведомлений.")]
         public async Task SetNotificationChannel(
             CommandContext ctx,
-            [Description("Канал")]
-            DiscordChannel target)
+            [Description("Канал")] DiscordChannel target)
         {
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
                 .WithDescription("Канал установлен!")
                 .WithColor(Constants.SuccessColor);
 
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
 
             if (guildSettings == null)
             {
                 guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
-                dbContext.GuildSettings.Add(guildSettings);
+                _dbContext.GuildSettings.Add(guildSettings);
             }
 
             guildSettings.NotificationChannelId = target.Id;
 
-            dbContext.SaveChanges();
+            _dbContext.SaveChanges();
 
             await ctx.RespondAsync(discordEmbed);
         }
@@ -201,16 +203,14 @@ namespace VoltBot.Commands
                 .WithDescription("Канал для отправки системных уведомлений не установлен!")
                 .WithColor(Constants.ErrorColor);
 
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
 
             if (guildSettings?.NotificationChannelId != null)
             {
                 if (guildSettings.IsReadyNotification != isEnabled)
                 {
                     guildSettings.IsReadyNotification = isEnabled;
-                    await dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Уведомления о включении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -233,16 +233,14 @@ namespace VoltBot.Commands
                 .WithDescription("Канал для отправки системных уведомлений не установлен!")
                 .WithColor(Constants.ErrorColor);
 
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
 
             if (guildSettings?.NotificationChannelId != null)
             {
                 if (guildSettings.IsShutdownNotification != isEnabled)
                 {
                     guildSettings.IsShutdownNotification = isEnabled;
-                    await dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Уведомления о выключении бота {(isEnabled ? "включены" : "отключены")}!")
@@ -267,16 +265,14 @@ namespace VoltBot.Commands
                 .WithDescription("Канал историй не установлен!")
                 .WithColor(Constants.ErrorColor);
 
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
 
             if (guildSettings?.HistoryChannelId != null)
             {
                 if (guildSettings.HistoryModuleIsEnabled != isEnabled)
                 {
                     guildSettings.HistoryModuleIsEnabled = isEnabled;
-                    await dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync();
                 }
 
                 discordEmbed.WithDescription($"Управление историями {(isEnabled ? "включено" : "отключено")}!")
@@ -291,8 +287,7 @@ namespace VoltBot.Commands
         [Description("Задать настройки для управления историями.")]
         public async Task CheckingHistorySettings(
             CommandContext ctx,
-            [Description("Канал историй")]
-            DiscordChannel historyChannel,
+            [Description("Канал историй")] DiscordChannel historyChannel,
             [Description("Количество допустимых слов для добавления за сообщение (Допустимые значения: 1 - 255)")]
             byte wordCount,
             [Description("Канал для уведомлений о некорректном сообщении")]
@@ -310,14 +305,12 @@ namespace VoltBot.Commands
                 .WithDescription("Настройки установлены!")
                 .WithColor(Constants.SuccessColor);
 
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = dbContext.GuildSettings.Find(ctx.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
 
             if (guildSettings == null)
             {
                 guildSettings = new GuildSettings { GuildId = ctx.Guild.Id };
-                dbContext.GuildSettings.Add(guildSettings);
+                _dbContext.GuildSettings.Add(guildSettings);
             }
 
             guildSettings.HistoryChannelId = historyChannel.Id;
@@ -325,7 +318,7 @@ namespace VoltBot.Commands
             guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel.Id;
             guildSettings.HistoryAdminPingRole = adminPingRole.Id;
 
-            dbContext.SaveChanges();
+            _dbContext.SaveChanges();
 
             await ctx.RespondAsync(discordEmbed);
         }
