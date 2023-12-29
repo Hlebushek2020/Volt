@@ -40,7 +40,10 @@ namespace VoltBot.Services.Implementation
                         currentMessage.ReferencedMessage?.Author.Id == e.User.Id)
                     {
                         List<DiscordMessage> discordMessages = new List<DiscordMessage>();
-                        discordMessages.AddRange(await e.Channel.GetMessagesAfterAsync(e.Message.Id, 4));
+                        discordMessages.AddRange(
+                            e.Channel
+                                .GetMessagesAfterAsync(e.Message.Id, 4)
+                                .ToBlockingEnumerable());
                         discordMessages.Add(currentMessage);
                         for (int numMessage = discordMessages.Count - 1; numMessage >= 0; numMessage--)
                         {

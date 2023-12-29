@@ -26,8 +26,15 @@ namespace VoltBot.Commands
             [Description("Причина выключения бота"), RemainingText]
             string reason)
         {
-            await ctx.RespondAsync("Ok");
-            _bot.Shutdown(reason);
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                await ctx.RespondAsync("Причина выключения не указана!");
+            }
+            else
+            {
+                await ctx.RespondAsync("Ok");
+                _bot.Shutdown(reason);
+            }
         }
 
         [Command("status")]

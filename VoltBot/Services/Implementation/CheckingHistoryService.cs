@@ -39,22 +39,25 @@ namespace VoltBot.Services.Implementation
                 _logger.LogInformation(
                     $"Guild {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
 
-                IReadOnlyList<DiscordMessage> beforeMessages = await e.Channel.GetMessagesBeforeAsync(e.Message.Id, 1);
-                DiscordMessage beforeMessage = beforeMessages.First();
+                DiscordMessage beforeMessage = e.Channel
+                    .GetMessagesBeforeAsync(e.Message.Id, 1)
+                    .ToBlockingEnumerable()
+                    .First();
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
                 string[] currentParts = e.Message.Content.Replace("  ", " ").Split(' ');
                 StringBuilder breakingRule = new StringBuilder();
+
                 if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount)
-                {
                     breakingRule.Append(AddTwoWords);
-                }
+
                 if (e.Message.Author.Id == beforeMessage.Author.Id)
                 {
                     if (breakingRule.Length > 0)
                         breakingRule.Append(", ");
                     breakingRule.Append(TwoMessagesInRow);
                 }
-                if (breakingRule != null)
+
+                if (breakingRule.Length > 0)
                 {
                     DiscordChannel discordChannel =
                         await sender.GetChannelAsync(guildSettings.HistoryAdminNotificationChannelId.Value);

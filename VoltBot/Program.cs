@@ -75,8 +75,8 @@ namespace VoltBot
                 }
                 catch (Exception ex)
                 {
-                    Log.Logger.ForContext<Program>().Fatal(ex, "Bot failed. Bot restart after 2 minutes.");
-                    Thread.Sleep(120000);
+                    Log.Logger.ForContext<Program>().Fatal(ex, "Bot failed. Bot restart after 1 minute.");
+                    Thread.Sleep(60000);
                 }
             }
 

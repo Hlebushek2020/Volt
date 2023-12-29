@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using VoltBot.Commands;
+using VoltBot.Database;
 using VoltBot.Services;
 using VoltBot.Services.Implementation;
 
@@ -20,12 +21,14 @@ namespace VoltBot
         public DateTime StartDateTime { get; private set; }
 
         private volatile bool _isRunning = false;
-        private bool _isDisposed = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger<Bot> _logger;
         private readonly IBotNotificationsService _botNotificationsService;
         private readonly ISettings _settings;
         private readonly IServiceProvider _services;
+
+        private bool _isDisposed = false;
+        private Exception _socketErrored;
 
         public Bot(ISettings settings)
         {
@@ -42,16 +45,20 @@ namespace VoltBot
                     Token = settings.BotToken,
                     TokenType = TokenType.Bot,
                     Intents = DiscordIntents.All,
-                    LoggerFactory = new LoggerFactory().AddSerilog(dispose: true)
+                    LoggerFactory = loggerFactory
                 });
 
-            _discordClient.Ready += DiscordClient_Ready;
+            _discordClient.SessionCreated += DiscordClientOnSessionCreated;
+            _discordClient.SocketErrored += DiscordClient_OnSocketErrored;
+
+            _logger.LogInformation("Initializing services");
 
             _services = new ServiceCollection()
                 .AddLogging(lb => lb.AddSerilog(dispose: true))
                 .AddSingleton(_discordClient)
                 .AddSingleton(settings)
                 .AddSingleton(typeof(IBot), this)
+                .AddDbContext<VoltDbContext>()
                 .AddSingleton<IForwardingMessageByUrlService, ForwardingMessageByUrlService>()
                 .AddSingleton<IForwardingPostFromVkByUrlService, ForwardingPostFromVkByUrlService>()
                 .AddSingleton<IBotPingService, BotPingService>()
@@ -69,6 +76,8 @@ namespace VoltBot
 
             _botNotificationsService = _services.GetService<IBotNotificationsService>();
 
+            _logger.LogInformation("Initializing commands");
+
             CommandsNextExtension commands = _discordClient.UseCommandsNext(
                 new CommandsNextConfiguration
                 {
@@ -85,11 +94,17 @@ namespace VoltBot
             commands.RegisterCommands<OwnerCommandModule>();
         }
 
-        ~Bot() { Dispose(false); }
-
-        private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
+        private async Task DiscordClientOnSessionCreated(DiscordClient sender, SessionReadyEventArgs args) =>
             await sender.UpdateStatusAsync(
                 new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
+
+        private Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
+        {
+            _socketErrored = args.Exception;
+            return Task.CompletedTask;
+        }
+
+        ~Bot() { Dispose(false); }
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
@@ -142,8 +157,9 @@ namespace VoltBot
 
         public async Task RunAsync()
         {
-            _logger.LogInformation("Discord client connect");
+            _socketErrored = null;
 
+            _logger.LogInformation("Discord client connect");
             await _discordClient.ConnectAsync();
             StartDateTime = DateTime.Now;
             _isRunning = true;
@@ -152,6 +168,9 @@ namespace VoltBot
 
             while (_isRunning)
             {
+                if (_socketErrored != null)
+                    throw _socketErrored;
+
                 await Task.Delay(200);
             }
         }
@@ -163,15 +182,15 @@ namespace VoltBot
             if (_discordClient != null)
             {
                 if (!string.IsNullOrEmpty(reason))
-                {
                     _botNotificationsService.SendShutdownNotifications(reason).Wait();
-                }
 
                 _logger.LogInformation("Disconnect discord client");
                 _discordClient.DisconnectAsync().Wait();
             }
 
             _isRunning = false;
+
+            _logger.LogInformation("Shutdown complete");
         }
 
         public void Dispose()
@@ -183,9 +202,7 @@ namespace VoltBot
         private void Dispose(bool disposing)
         {
             if (_isDisposed)
-            {
                 return;
-            }
 
             if (disposing)
             {

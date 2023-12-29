@@ -15,11 +15,16 @@ namespace VoltBot.Services.Implementation;
 internal class BotNotificationsService : IBotNotificationsService
 {
     private readonly DiscordClient _discordClient;
+    private readonly VoltDbContext _dbContext;
     private readonly ILogger<BotNotificationsService> _logger;
 
-    public BotNotificationsService(DiscordClient discordClient, ILogger<BotNotificationsService> logger)
+    public BotNotificationsService(
+        DiscordClient discordClient,
+        VoltDbContext dbContext,
+        ILogger<BotNotificationsService> logger)
     {
         _discordClient = discordClient;
+        _dbContext = dbContext;
         _logger = logger;
 
         _logger.LogInformation($"{nameof(BotNotificationsService)} loaded.");
@@ -39,9 +44,8 @@ internal class BotNotificationsService : IBotNotificationsService
 
     private async Task SendNotifications(string message, Expression<Func<GuildSettings, bool>> predicate)
     {
-        VoltDbContext voltDbContext = new VoltDbContext();
         IReadOnlyList<GuildSettings> guildSettingsList =
-            await voltDbContext.GuildSettings.Where(predicate).ToListAsync();
+            await _dbContext.GuildSettings.Where(predicate).ToListAsync();
 
         DiscordEmbed discordEmbed = new DiscordEmbedBuilder()
             .WithTitle(_discordClient.CurrentUser.Username)
