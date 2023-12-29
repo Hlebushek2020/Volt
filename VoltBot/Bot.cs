@@ -47,7 +47,7 @@ namespace VoltBot
                     LoggerFactory = loggerFactory
                 });
 
-            _discordClient.Ready += DiscordClient_Ready;
+            _discordClient.SessionCreated += DiscordClientOnSessionCreated;
             _discordClient.SocketErrored += DiscordClient_OnSocketErrored;
 
             _logger.LogInformation("Initializing services");
@@ -92,6 +92,10 @@ namespace VoltBot
             commands.RegisterCommands<OwnerCommandModule>();
         }
 
+        private async Task DiscordClientOnSessionCreated(DiscordClient sender, SessionReadyEventArgs args) =>
+            await sender.UpdateStatusAsync(
+                new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
+
         private Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
         {
             _socketErrored = args.Exception;
@@ -99,10 +103,6 @@ namespace VoltBot
         }
 
         ~Bot() { Dispose(false); }
-
-        private async Task DiscordClient_Ready(DiscordClient sender, ReadyEventArgs e) =>
-            await sender.UpdateStatusAsync(
-                new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
 
         private Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {
