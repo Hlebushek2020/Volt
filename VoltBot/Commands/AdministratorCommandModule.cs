@@ -14,7 +14,7 @@ using VoltBot.Database.Entities;
 namespace VoltBot.Commands
 {
     /// <summary>
-    /// Сommand module containing only those commands that are available to server (guild) administrators
+    /// Command module containing only those commands that are available to server (guild) administrators
     /// </summary>
     [RequireUserPermissions(Permissions.Administrator)]
     internal class AdministratorCommandModule : BaseCommandModule

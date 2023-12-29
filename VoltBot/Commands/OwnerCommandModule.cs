@@ -26,6 +26,8 @@ namespace VoltBot.Commands
             [Description("Причина выключения бота"), RemainingText]
             string reason)
         {
+            // TODO: Check reason for null
+            
             await ctx.RespondAsync("Ok");
             _bot.Shutdown(reason);
         }
