@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -98,10 +99,13 @@ namespace VoltBot
             await sender.UpdateStatusAsync(
                 new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
 
-        private Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
+        private async Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
         {
-            _socketErrored = args.Exception;
-            return Task.CompletedTask;
+            if (args.Exception is WebSocketException)
+            {
+                await sender.DisconnectAsync();
+                _socketErrored = args.Exception;
+            }
         }
 
         ~Bot() { Dispose(false); }
