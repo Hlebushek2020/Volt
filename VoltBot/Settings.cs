@@ -15,9 +15,10 @@ namespace VoltBot
         public string BotDescription { get; set; }
         public LogLevel BotLogLevel { get; set; }
         public string VkSecret { get; set; }
-        public bool BugReport { get; set; } = false;
+        public bool BugReport { get; set; }
         public ulong BugReportChannel { get; set; }
         public ulong BugReportServer { get; set; }
+        public string PingTheHost { get; set; }
         #endregion
 
         private Settings()
@@ -26,6 +27,7 @@ namespace VoltBot
             BotDescription = $"Список доступных команд. `{BotPrefix}help [команда]` для полной информации.";
             BotLogLevel = LogLevel.Information;
             BugReport = false;
+            PingTheHost = "gateway.discord.gg";
         }
 
         /// <summary>

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using VoltBot.Commands;
 using VoltBot.Database;
+using VoltBot.Exceptions;
 using VoltBot.Services;
 using VoltBot.Services.Implementation;
 
@@ -22,11 +23,12 @@ namespace VoltBot
         public DateTime StartDateTime { get; private set; }
 
         private volatile bool _isRunning = false;
+        private volatile bool _isRestart = false;
         private readonly DiscordClient _discordClient;
         private readonly ILogger<Bot> _logger;
         private readonly IBotNotificationsService _botNotificationsService;
+        private readonly IConnectionCheckerService _connectionCheckerService;
         private readonly ISettings _settings;
-        private readonly IServiceProvider _services;
 
         private bool _isDisposed = false;
         private Exception _socketErrored;
@@ -54,7 +56,7 @@ namespace VoltBot
 
             _logger.LogInformation("Initializing services");
 
-            _services = new ServiceCollection()
+            IServiceProvider services = new ServiceCollection()
                 .AddLogging(lb => lb.AddSerilog(dispose: true))
                 .AddSingleton(_discordClient)
                 .AddSingleton(settings)
@@ -66,16 +68,18 @@ namespace VoltBot
                 .AddSingleton<ICheckingHistoryService, CheckingHistoryService>()
                 .AddSingleton<IDeletingMessagesByEmojiService, DeletingMessagesByEmojiService>()
                 .AddSingleton<IBotNotificationsService, BotNotificationsService>()
+                .AddSingleton<IConnectionCheckerService, ConnectionCheckerService>()
                 .BuildServiceProvider();
 
             // Initializing services that won't be called anywhere
-            _services.GetService<IForwardingMessageByUrlService>();
-            _services.GetService<IForwardingPostFromVkByUrlService>();
-            _services.GetService<IBotPingService>();
-            _services.GetService<ICheckingHistoryService>();
-            _services.GetService<IDeletingMessagesByEmojiService>();
+            services.GetService<IForwardingMessageByUrlService>();
+            services.GetService<IForwardingPostFromVkByUrlService>();
+            services.GetService<IBotPingService>();
+            services.GetService<ICheckingHistoryService>();
+            services.GetService<IDeletingMessagesByEmojiService>();
 
-            _botNotificationsService = _services.GetService<IBotNotificationsService>();
+            _botNotificationsService = services.GetService<IBotNotificationsService>();
+            _connectionCheckerService = services.GetService<IConnectionCheckerService>();
 
             _logger.LogInformation("Initializing commands");
 
@@ -84,7 +88,7 @@ namespace VoltBot
                 {
                     StringPrefixes = new List<string> { settings.BotPrefix },
                     EnableDefaultHelp = false,
-                    Services = _services
+                    Services = services
                 });
 
             commands.CommandErrored += Commands_CommandErrored;
@@ -99,13 +103,15 @@ namespace VoltBot
             await sender.UpdateStatusAsync(
                 new DiscordActivity($"на тебя | {_settings.BotPrefix}help", ActivityType.Watching));
 
-        private async Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
+        private Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
         {
-            if (args.Exception is WebSocketException)
+            if (args.Exception is WebSocketException webSocketException)
             {
-                await sender.DisconnectAsync();
-                _socketErrored = args.Exception;
+                _logger.LogWarning($"OnSocketErrored WebSocketErrorCode: {webSocketException.WebSocketErrorCode}");
+                _logger.LogWarning($"OnSocketErrored ErrorCode: {webSocketException.ErrorCode}");
+                _isRestart = !_connectionCheckerService.Check();
             }
+            return Task.CompletedTask;
         }
 
         ~Bot() { Dispose(false); }
@@ -172,8 +178,8 @@ namespace VoltBot
 
             while (_isRunning)
             {
-                if (_socketErrored != null)
-                    throw _socketErrored;
+                if (_isRestart)
+                    throw new NeedRestartException();
 
                 await Task.Delay(200);
             }

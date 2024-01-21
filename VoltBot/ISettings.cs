@@ -15,5 +15,6 @@ namespace VoltBot
         bool BugReport { get; }
         ulong BugReportChannel { get; }
         ulong BugReportServer { get; }
+        string PingTheHost { get; }
     }
 }
