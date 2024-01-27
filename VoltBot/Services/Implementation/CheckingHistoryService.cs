@@ -15,10 +15,15 @@ namespace VoltBot.Services.Implementation
         private const char AddTwoWords = '4';
         private const char TwoMessagesInRow = '5';
 
+        private readonly VoltDbContext _dbContext;
         private readonly ILogger<CheckingHistoryService> _logger;
 
-        public CheckingHistoryService(DiscordClient discordClient, ILogger<CheckingHistoryService> logger)
+        public CheckingHistoryService(
+            DiscordClient discordClient,
+            VoltDbContext dbContext,
+            ILogger<CheckingHistoryService> logger)
         {
+            _dbContext = dbContext;
             _logger = logger;
 
             discordClient.MessageCreated += Handler;
@@ -28,9 +33,7 @@ namespace VoltBot.Services.Implementation
 
         public async Task Handler(DiscordClient sender, MessageCreateEventArgs e)
         {
-            using VoltDbContext dbContext = new VoltDbContext();
-
-            GuildSettings guildSettings = await dbContext.GuildSettings.FindAsync(e.Guild.Id);
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(e.Guild.Id);
 
             if (guildSettings is { HistoryModuleIsEnabled: true } &&
                 e.Channel.Id == guildSettings.HistoryChannelId)
