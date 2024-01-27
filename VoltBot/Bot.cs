@@ -30,8 +30,7 @@ namespace VoltBot
         private readonly IConnectionCheckerService _connectionCheckerService;
         private readonly ISettings _settings;
 
-        private bool _isDisposed = false;
-        private Exception _socketErrored;
+        private bool _isDisposed;
 
         public Bot(ISettings settings)
         {
@@ -164,12 +163,11 @@ namespace VoltBot
 
         public async Task RunAsync()
         {
-            _socketErrored = null;
-
             _logger.LogInformation("Discord client connect");
             await _discordClient.ConnectAsync();
             StartDateTime = DateTime.Now;
             _isRunning = true;
+            _isRestart = false;
 
             await _botNotificationsService.SendReadyNotifications();
 
