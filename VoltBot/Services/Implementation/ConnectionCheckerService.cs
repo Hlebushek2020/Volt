@@ -26,7 +26,7 @@ public class ConnectionCheckerService : IConnectionCheckerService
         try
         {
             Ping ping = new Ping();
-            PingReply pingReply = ping.Send("gateway.discord.gg");
+            PingReply pingReply = ping.Send(_settings.PingTheHost);
             return pingReply.Status == IPStatus.Success;
         }
         catch (Exception ex)
