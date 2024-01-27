@@ -105,12 +105,9 @@ namespace VoltBot
 
         private Task DiscordClient_OnSocketErrored(DiscordClient sender, SocketErrorEventArgs args)
         {
-            if (args.Exception is WebSocketException webSocketException)
-            {
-                _logger.LogWarning($"OnSocketErrored WebSocketErrorCode: {webSocketException.WebSocketErrorCode}");
-                _logger.LogWarning($"OnSocketErrored ErrorCode: {webSocketException.ErrorCode}");
+            if (args.Exception is WebSocketException)
                 _isRestart = !_connectionCheckerService.Check();
-            }
+
             return Task.CompletedTask;
         }
 

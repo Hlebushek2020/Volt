@@ -55,6 +55,12 @@ namespace VoltBot.Database.Entities
         /// Gets or sets the Id of the role that is pinged in the rule violation message. Refers to the histories management module.
         /// </summary>
         public ulong? HistoryAdminPingRole { get; set; }
+
+        /// <summary>
+        /// The text of the message signaling the beginning of the history
+        /// </summary>
+        [MaxLength(256)]
+        public string HistoryStartMessage { get; set; } = string.Empty;
         #endregion
     }
 }

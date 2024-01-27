@@ -296,9 +296,7 @@ namespace VoltBot.Commands
             DiscordRole adminPingRole)
         {
             if (wordCount == 0)
-            {
-                throw new ArgumentException();
-            }
+                throw new ArgumentException("", nameof(wordCount));
 
             DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                 .WithTitle(ctx.Member.DisplayName)
@@ -318,7 +316,43 @@ namespace VoltBot.Commands
             guildSettings.HistoryAdminNotificationChannelId = adminNotificationChannel.Id;
             guildSettings.HistoryAdminPingRole = adminPingRole.Id;
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
+
+            await ctx.RespondAsync(discordEmbed);
+        }
+
+        [Command("history-start-message")]
+        [Aliases("hist-sm")]
+        [Description("Задает текст вложенного сообщения как текст, сигнализирующий о начале новой истории.")]
+        public async Task HistoryStartMessage(CommandContext ctx)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithDescription("Канал историй не установлен!")
+                .WithColor(Constants.ErrorColor);
+
+            if (ctx.Message.ReferencedMessage == null)
+            {
+                discordEmbed.WithDescription("Данная команда должна быть ответом на сообщение!");
+            }
+            else if (ctx.Message.ReferencedMessage.Content.Length > 256)
+            {
+                discordEmbed.WithDescription("Текст не может быть больше чем 256 символов!");
+            }
+            else
+            {
+                GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
+
+                if (guildSettings != null)
+                {
+                    guildSettings.HistoryStartMessage = ctx.Message.ReferencedMessage.Content;
+
+                    await _dbContext.SaveChangesAsync();
+
+                    discordEmbed.WithDescription("Текст задан!")
+                        .WithColor(Constants.SuccessColor);
+                }
+            }
 
             await ctx.RespondAsync(discordEmbed);
         }

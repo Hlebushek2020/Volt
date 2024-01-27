@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -39,12 +38,20 @@ namespace VoltBot.Services.Implementation
                 _logger.LogInformation(
                     $"Guild {e.Guild.Name}. Channel: {e.Channel.Name}. Jump link: {e.Message.JumpLink}");
 
+                if (guildSettings.HistoryStartMessage.Equals(e.Message.Content))
+                    return;
+
                 DiscordMessage beforeMessage = e.Channel
                     .GetMessagesBeforeAsync(e.Message.Id, 1)
                     .ToBlockingEnumerable()
                     .First();
+
+                if (guildSettings.HistoryStartMessage.Equals(beforeMessage.Content))
+                    return;
+
                 string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
                 string[] currentParts = e.Message.Content.Replace("  ", " ").Split(' ');
+
                 StringBuilder breakingRule = new StringBuilder();
 
                 if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount)

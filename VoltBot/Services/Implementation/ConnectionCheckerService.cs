@@ -25,6 +25,7 @@ public class ConnectionCheckerService : IConnectionCheckerService
     {
         try
         {
+            _logger.LogInformation("Checking the connection");
             Ping ping = new Ping();
             PingReply pingReply = ping.Send(_settings.PingTheHost);
             return pingReply.Status == IPStatus.Success;
