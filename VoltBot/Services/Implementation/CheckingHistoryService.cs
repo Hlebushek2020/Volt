@@ -52,8 +52,8 @@ namespace VoltBot.Services.Implementation
                 if (guildSettings.HistoryStartMessage.Equals(beforeMessage.Content))
                     return;
 
-                string[] beforeParts = cleanMessage(beforeMessage.Content);
-                string[] currentParts = cleanMessage(e.Message.Content);
+                string[] beforeParts = CleanMessage(beforeMessage.Content);
+                string[] currentParts = CleanMessage(e.Message.Content);
 
                 StringBuilder breakingRule = new StringBuilder();
 
@@ -91,11 +91,11 @@ namespace VoltBot.Services.Implementation
             }
         }
 
-        private string[] cleanMessage(string message)
+        private string[] CleanMessage(string message)
         {
             return message.Split(' ')
                 .Select(x => x.Trim())
-                .Where(x => x != "-" && !string.IsNullOrWhiteSpace(x))
+                .Where(x => !string.IsNullOrWhiteSpace(x) && "-".Equals(x))
                 .ToArray();
         }
     }
