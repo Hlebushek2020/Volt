@@ -52,8 +52,8 @@ namespace VoltBot.Services.Implementation
                 if (guildSettings.HistoryStartMessage.Equals(beforeMessage.Content))
                     return;
 
-                string[] beforeParts = beforeMessage.Content.Replace("  ", " ").Split(' ');
-                string[] currentParts = e.Message.Content.Replace("  ", " ").Split(' ');
+                string[] beforeParts = cleanMessage(beforeMessage.Content);
+                string[] currentParts = cleanMessage(e.Message.Content);
 
                 StringBuilder breakingRule = new StringBuilder();
 
@@ -89,6 +89,14 @@ namespace VoltBot.Services.Implementation
                     await discordChannel.SendMessageAsync(discordMessage);
                 }
             }
+        }
+
+        private string[] cleanMessage(string message)
+        {
+            return message.Split(' ')
+                .Select(x => x.Trim())
+                .Where(x => x != "-" && !string.IsNullOrWhiteSpace(x))
+                .ToArray();
         }
     }
 }
