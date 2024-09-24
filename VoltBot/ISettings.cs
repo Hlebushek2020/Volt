@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using VoltBot.Enums;
 
 namespace VoltBot
 {
@@ -16,5 +18,6 @@ namespace VoltBot
         ulong BugReportChannel { get; }
         ulong BugReportServer { get; }
         string PingTheHost { get; }
+        IReadOnlyDictionary<HistoryRules, string> TextOfHistoryRules { get; }
     }
 }
