@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using Telegram.Bot;
+using VoltBotTelegram.Handlers;
 
 namespace VoltBotTelegram;
 
@@ -57,5 +59,22 @@ internal class Program
         };
 
         Log.Logger = loggerConfiguration.CreateLogger();
+
+        TelegramBotClient telegramClient = new TelegramBotClient(new TelegramBotClientOptions(settings.BotToken));
+
+        HistoryHandler historyHandler = new HistoryHandler();
+
+        telegramClient.OnMessage += historyHandler.OnMessageHandler;
+
+        telegramClient.OnError += (sender, error) =>
+        {
+            Log.Error(error.ToString(), sender);
+            return Task.CompletedTask;
+        };
+
+        while (Console.ReadKey().Key != ConsoleKey.Escape)
+        {
+            Console.WriteLine("Press 'Esc' key to exit");
+        }
     }
 }
