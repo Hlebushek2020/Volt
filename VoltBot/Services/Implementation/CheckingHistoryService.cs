@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -7,23 +6,24 @@ using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using VoltBot.Database;
 using VoltBot.Database.Entities;
+using VoltBot.Enums;
 
 namespace VoltBot.Services.Implementation
 {
     internal class CheckingHistoryService : ICheckingHistoryService
     {
-        private const char AddTwoWords = '4';
-        private const char TwoMessagesInRow = '5';
-
         private readonly VoltDbContext _dbContext;
+        private readonly ISettings _settings;
         private readonly ILogger<CheckingHistoryService> _logger;
 
         public CheckingHistoryService(
             DiscordClient discordClient,
             VoltDbContext dbContext,
+            ISettings settings,
             ILogger<CheckingHistoryService> logger)
         {
             _dbContext = dbContext;
+            _settings = settings;
             _logger = logger;
 
             discordClient.MessageCreated += Handler;
@@ -55,17 +55,15 @@ namespace VoltBot.Services.Implementation
                 string[] beforeParts = CleanMessage(beforeMessage.Content);
                 string[] currentParts = CleanMessage(e.Message.Content);
 
-                StringBuilder breakingRule = new StringBuilder();
+                string breakingRule = "";
 
                 if (beforeParts.Length < currentParts.Length - guildSettings.HistoryWordCount)
-                    breakingRule.Append(AddTwoWords);
+                    breakingRule += $"- {_settings.TextOfHistoryRules[HistoryRules.AddTwoWords]}";
 
                 if (e.Message.Author.Id == beforeMessage.Author.Id)
-                {
-                    if (breakingRule.Length > 0)
-                        breakingRule.Append(", ");
-                    breakingRule.Append(TwoMessagesInRow);
-                }
+                    breakingRule += $"- {_settings.TextOfHistoryRules[HistoryRules.TwoMessagesInRow]}";
+
+                breakingRule = breakingRule.Trim('\r', '\n');
 
                 if (breakingRule.Length > 0)
                 {
@@ -75,12 +73,36 @@ namespace VoltBot.Services.Implementation
                     DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
                         .WithTitle("Checking history")
                         .WithDescription(e.Message.JumpLink.ToString())
-                        .AddField("Cases", breakingRule.ToString())
+                        .AddField("Нарушения", breakingRule)
                         .WithColor(Constants.WarningColor);
 
                     RoleMention roleMention = new RoleMention(guildSettings.HistoryAdminPingRole.Value);
 
-                    // For ping to work, the role must be specified in the Сontent and Mention
+                    try
+                    {
+                        DiscordMember discordMember = await e.Guild.GetMemberAsync(e.Message.Author.Id);
+
+                        if (discordMember.IsBot)
+                            return;
+
+                        DiscordDmChannel discordDmChannel = await discordMember.CreateDmChannelAsync();
+
+                        DiscordEmbedBuilder dmDiscordEmbed = new DiscordEmbedBuilder()
+                            .WithColor(Constants.WarningColor)
+                            .WithTitle("Игра \"История\"")
+                            .WithDescription(
+                                $"Вы нарушили следующие правила игры: \n{breakingRule}\n\nСсылка на сообщение: {e.Message.JumpLink}");
+
+                        await discordDmChannel.SendMessageAsync(dmDiscordEmbed);
+
+                        discordEmbed.AddField("Уведомление", "Отправлено");
+                    }
+                    catch
+                    {
+                        discordEmbed.AddField("Уведомление", "**Не отправлено**");
+                    }
+
+                    // For ping to work, the role must be specified in the Content and Mention
                     DiscordMessageBuilder discordMessage = new DiscordMessageBuilder()
                         .WithContent($"<@&{guildSettings.HistoryAdminPingRole.Value}>")
                         .AddMention(roleMention)
@@ -91,11 +113,11 @@ namespace VoltBot.Services.Implementation
             }
         }
 
-        private string[] CleanMessage(string message)
+        private static string[] CleanMessage(string message)
         {
             return message.Split(' ')
                 .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x) && "-".Equals(x))
+                .Where(x => !string.IsNullOrWhiteSpace(x) && !"-".Equals(x))
                 .ToArray();
         }
     }

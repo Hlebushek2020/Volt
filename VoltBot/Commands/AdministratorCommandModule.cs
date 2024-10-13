@@ -358,6 +358,66 @@ namespace VoltBot.Commands
         }
         #endregion
 
+        [Command("show-settings")]
+        [Aliases("settings")]
+        [Description("Показать текущие настройки для гильдии (сервера).")]
+        public async Task ShowSettings(CommandContext ctx)
+        {
+            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder()
+                .WithTitle(ctx.Member.DisplayName)
+                .WithColor(Constants.SuccessColor);
+
+            GuildSettings guildSettings = await _dbContext.GuildSettings.FindAsync(ctx.Guild.Id);
+
+            if (guildSettings != null)
+            {
+                if (guildSettings.NotificationChannelId.HasValue)
+                    discordEmbed.AddField(
+                        "Канал для системных уведомлений",
+                        guildSettings.NotificationChannelId.ToString());
+
+                discordEmbed.AddField(
+                    "Уведомление о включении бота",
+                    guildSettings.IsReadyNotification.ToString());
+
+                discordEmbed.AddField(
+                    "Уведомление о выключении бота",
+                    guildSettings.IsShutdownNotification.ToString());
+
+                if (guildSettings.HistoryChannelId.HasValue)
+                    discordEmbed.AddField(
+                        "Канал историй",
+                        guildSettings.HistoryChannelId.ToString());
+
+                if (guildSettings.HistoryWordCount.HasValue)
+                    discordEmbed.AddField(
+                        "Количество допустимых слов",
+                        guildSettings.HistoryWordCount.ToString());
+
+                if (guildSettings.HistoryAdminNotificationChannelId.HasValue)
+                    discordEmbed.AddField(
+                        "Канал уведомлений о некорректном сообщении (история)",
+                        guildSettings.HistoryAdminNotificationChannelId.ToString());
+
+                if (guildSettings.HistoryAdminPingRole.HasValue)
+                    discordEmbed.AddField(
+                        "Пингуемая роль при некорректном сообщении (история)",
+                        guildSettings.HistoryAdminPingRole.ToString());
+
+                discordEmbed.AddField(
+                    "Управление историями",
+                    guildSettings.HistoryModuleIsEnabled.ToString());
+
+                if (!string.IsNullOrWhiteSpace(guildSettings.HistoryStartMessage))
+                    discordEmbed.AddField(
+                        "Сообщение о начале новой истории",
+                        $"```\n{guildSettings.HistoryStartMessage}\n```");
+            }
+
+            if (discordEmbed.Fields.Count > 0)
+                await ctx.RespondAsync(discordEmbed);
+        }
+
         #region NOT COMMAND
         private async Task Forward(
             CommandContext ctx,

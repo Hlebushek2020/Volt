@@ -6,6 +6,7 @@
         <RootNamespace>VoltBot</RootNamespace>
         <Authors>Sergey Govorunov</Authors>
         <Copyright>Sergey Govorunov</Copyright>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AssemblyVersion>2.1.0.0</AssemblyVersion>
         <FileVersion>2.1.0.0</FileVersion>
         <InformationalVersion>2.1.0</InformationalVersion>

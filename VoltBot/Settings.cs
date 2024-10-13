@@ -1,7 +1,9 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using VoltBot.Enums;
 
 namespace VoltBot
 {
@@ -19,6 +21,7 @@ namespace VoltBot
         public ulong BugReportChannel { get; set; }
         public ulong BugReportServer { get; set; }
         public string PingTheHost { get; set; }
+        public IReadOnlyDictionary<HistoryRules, string> TextOfHistoryRules { get; set; }
         #endregion
 
         private Settings()
@@ -28,6 +31,17 @@ namespace VoltBot
             BotLogLevel = LogLevel.Information;
             BugReport = false;
             PingTheHost = "gateway.discord.gg";
+            TextOfHistoryRules = new Dictionary<HistoryRules, string>
+            {
+                {
+                    HistoryRules.AddTwoWords,
+                    "К предыдущему сообщению можно добавить только одно или 2 слова в самый конец"
+                },
+                {
+                    HistoryRules.TwoMessagesInRow,
+                    "Один человек не может написать два сообщения подряд"
+                }
+            };
         }
 
         /// <summary>
