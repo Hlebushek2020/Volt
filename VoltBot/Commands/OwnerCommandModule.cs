@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using VoltBot.Database;
 
 namespace VoltBot.Commands
 {
@@ -15,8 +16,13 @@ namespace VoltBot.Commands
     internal class OwnerCommandModule : BaseCommandModule
     {
         private readonly IBot _bot;
+        private readonly VoltDbContext _dbContext;
 
-        public OwnerCommandModule(IBot bot) { _bot = bot; }
+        public OwnerCommandModule(IBot bot, VoltDbContext dbContext)
+        {
+            _bot = bot;
+            _dbContext = dbContext;
+        }
 
         [Command("shutdown")]
         [Aliases("sd")]
@@ -58,5 +64,7 @@ namespace VoltBot.Commands
 
             await ctx.RespondAsync(discordEmbed);
         }
+
+      
     }
 }
