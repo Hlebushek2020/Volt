@@ -1,7 +1,7 @@
 /.idea
 /.vs
 /packages
-/VoltBot/bin
-/VoltBot/obj
+**/bin
+**/obj
 *Thumbs.db
 *.user
